@@ -1,5 +1,4 @@
-from flask import Flask, render_template
-from flask import session
+from flask import Flask, render_template, request, session
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -10,16 +9,13 @@ from models import *
 
 @app.route('/')
 def home():
-	test_query = UnitInfo.query.filter_by(pdb_id='1ffk')
-	return test_query
-
-@app.route('/correspondence/<unitid>')
-def correspondence(unitid):
-	return unitid
-	
-@app.route('/welcome')
-def welcome():
 	return render_template("welcome.html")
+
+@app.route('/correspondence/<unitid>', methods=['GET', 'POST'])
+def correspondence(unitid):
+	test_query = UnitCorrespondence.query.filter_by(unit_id_1 = unitid).limit(10).all()
+	test_query = str(test_query)
+	return test_query
 
 if __name__ == '__main__':
 	app.run(debug=True)
