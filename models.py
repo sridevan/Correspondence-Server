@@ -1,18 +1,22 @@
-
 from app import db
 
-class UnitInfo(db.Model):
+class UnitCorrespondence(db.Model):
 
-	__tablename__ = "unit_info"
+	__tablename__ = "correspondence_units"
 
-	unit_id = db.Column(db.String, primary_key=True)
-	pdb_id = db.Column(db.String, nullable=True)
-	unit_type_id = db.Column(db.String, nullable=True)
+	correspondence_id = db.Column(db.String, primary_key=True)
+	unit_id_1 = db.Column(db.String, primary_key=True)
+	unit_id_2 = db.Column(db.String, primary_key=True)
 
-	def __init__(self, pdb_id, unit_type_id):
-		self.pdb_id = pdb_id
-		self.unit_type_id = unit_type_id
+	def __init__(self, unit_id_1, unit_id_2):
+		self.unit_id_1 = unit_id_1
+		self.unit_id_2 = unit_id_2
 
 	def __repr__(self):
-		return "pdb id {} molecule type {}".format(self.pdb_id, self.unit_type_id)
+		return "{}:{}".format(self.unit_id_1, self.unit_id_2)
+		#equivalent_residues = {self.unit_id_1: self.unit_id_2}
+		#return equivalent_residues
+		
+
+
     
