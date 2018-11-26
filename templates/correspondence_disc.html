@@ -95,7 +95,7 @@
         </div>
       </div>
 
-      <div class = "viewer">
+      <div class = "viewer" align = "center">
         <div class="col-sm-4">
 
           <script type="text/javascript">
@@ -131,6 +131,21 @@
                           <option value="RSR">Real Space R (RSR)</option>
                           <option value="RSRZ">RSR Z-Score (RSRZ)</option>
           </select>
+
+          <div class = "heatmap" align = "left">
+
+        
+          <div id ='chart' style="text-align: center;"></div>
+
+          <script src="//d3js.org/d3.v4.min.js"></script>
+          <script type="text/javascript"> 
+             var data = {{ data | tojson | safe }}; 
+          </script>
+          <script type="text/javascript" src="/static/js/heatmap.js"></script>
+            
+
+        
+          </div>
             
 
         </div>
