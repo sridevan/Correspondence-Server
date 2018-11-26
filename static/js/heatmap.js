@@ -69,6 +69,12 @@
 
 //////////////////////////////////////////////////////////////////////////////////////
 
+  var data = JSON.parse(data.replace(/\bNaN\b/g, "null"));
+
+  //console.log(result)
+
+  //var data = JSON.parse(data);
+
   // get the unique values of the ife's in an ordered list
   var lookup = {};
   var items = data;
@@ -76,6 +82,7 @@
 
   for (var item, i = 0; item = items[i++];) {
       var name = item.ife1;
+      //console.log(name)
 
       if (!(name in lookup)) {
         lookup[name] = 1;
@@ -86,10 +93,12 @@
   // Calculate the size of ife_nr array
   ife_nr_size = ife_nr.length;
 
+  console.log(ife_nr_size)
+
   // Set the dimensions of the canvas
   var margin = {top: 20, right: 10, bottom: 70, left: 90},
-    width = 600 - margin.left - margin.right,
-    height = (600 - margin.top - margin.bottom),
+    width = 500 - margin.left - margin.right,
+    height = (500 - margin.top - margin.bottom),
     gridSize = Math.round10((width / ife_nr_size), -1),
     legendElementWidth = gridSize * ife_nr_size,
     new_width = gridSize * ife_nr_size;
@@ -98,33 +107,42 @@
       height = new_width;
     };
 
+    console.log(width)
+    console.log(height)
+
       // the unary operator (+) converts a numeric string into a number
       data.forEach(function(d) {
         ife1 = d.ife1;
         //ife1_len = +d.ife1_len
-        ife1_index = +d.ife1_index
+        ife1_index = d.ife1_index
         ife2 = d.ife2;
         //ife2_len = +d.ife2_len
-        ife2_index = +d.ife2_index
+        ife2_index = d.ife2_index
         //match_count = +d.match_count
-        discrepancy = +d.discrepancy;
+        discrepancy = d.discrepancy;
       });
 
       var domainMax = d3.max(data, function(d) {return +d.discrepancy;});
       var domainMin = d3.min(data, function(d) {return +d.discrepancy;});
 
-      // Check the maximum discrepancy value. Use 0.5 if max discrepancy is above 0.5
-      if (domainMax < 0.5) {
+      /* Check the maximum discrepancy value. Use 0.5 if max discrepancy is above 0.5
+      if (domainMax < 5) {
         var colorScale = d3.scaleLinear()
           .domain(linspace(domainMin, domainMax, viridisColor.length))
           .range(viridisColor)
           .clamp(true);
       } else {
         var colorScale = d3.scaleLinear()
-          .domain(linspace(domainMin, 0.5, viridisColor.length))
+          .domain(linspace(domainMin, 5, viridisColor.length))
           .range(viridisColor)
           .clamp(true);
       }
+      */
+
+      var colorScale = d3.scaleLinear()
+          .domain(linspace(domainMin, domainMax, viridisColor.length))
+          .range(viridisColor)
+          //.clamp(true);
 
       // Set the svg container
       var svg = d3.select("#chart").append("svg")
@@ -248,7 +266,7 @@
         .attr("transform", "translate(" + 0 + "," + (height + 5) + ")")
         .style("fill", "url(#linear-gradient)");
 
-      // create a scale for the legend
+      /* create a scale for the legend
       if (domainMax < 0.5) {
         var legendScale = d3.scaleLinear()
           .domain([domainMin, domainMax])
@@ -260,6 +278,11 @@
           .range([0, width])
           .clamp(true);
       }
+      */
+
+      var legendScale = d3.scaleLinear()
+          .domain([domainMin, domainMax])
+          .range([0, width])
 
       // create an axis for the legend
       var legendAxis = d3.axisBottom()
