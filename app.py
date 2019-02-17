@@ -36,12 +36,30 @@ def correspondence():
 
     unitid1 = request.args['unitid1']
     unitid2 = request.args['unitid2']
-    unitid3 = request.args['unitid3']
+    # unitid3 = request.args['unitid3']
 
-    # return unitid1 + unitid2 + unitid3
+    # ife1 = '|'.join(unitid1.split('|')[:3])
+    pdb = unitid1.split('|')[0]
+    chain_info = unitid1.split('|')[2]
+    chain_index1 = unitid1.split('|')[-1]
+    chain_index2 = unitid2.split('|')[-1]
+
+    # get list of unit ids as specified by the range
+
+    units_list = []
+    units_query = UnitInfo.query.filter_by(pdb_id = pdb, chain = chain_info).\
+                                      filter(UnitInfo.chain_index.between(chain_index1, chain_index2))\
+                                      .order_by(UnitInfo.chain_index).all()
+    for row in units_query:
+        units_list.append(row.unit_id)
+
+
+
+
+
 
     # Need to automate this part
-
+    '''
     res1_correspondence = []
     res1_correspondence_query = UnitCorrespondence.query.filter_by(unit_id_1=unitid1).limit(10).all()
     for row in res1_correspondence_query:
@@ -226,10 +244,13 @@ def correspondence():
 
     heatmap_data = json.dumps(heatmap_data, ensure_ascii=False)
 
-    # return json.dumps(heatmap_data)
+    # return json.dumps(zipped_unitid_r)
 
     return render_template("correspondence_disc.html", query_res1=unitid1, query_res2=unitid2, query_res3=unitid3,
-                           ife=neworder, coord=coord_ordered, data=heatmap_data)
+    ife=neworder, coord=coord_ordered, data=heatmap_data)
+    '''
+
+    return json.dumps(units_list)
 
 
 if __name__ == '__main__':
