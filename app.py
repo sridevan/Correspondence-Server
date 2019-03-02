@@ -1,8 +1,11 @@
 import collections as coll
 from flask import Flask, json, jsonify, render_template, render_template_string, request, session
+from sqlalchemy import tuple_
 from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
 import numpy as np
+import itertools
+import time
 from numpy import nan
 
 np.set_printoptions(threshold=np.nan)
@@ -24,6 +27,7 @@ from discrepancy import *
 from greedyInsertion import *
 
 
+
 @app.route('/')
 def home():
     return render_template("welcome.html")
@@ -34,9 +38,17 @@ def correspondence():
     # chain_info = '|'.join(unitid.split('|')[:3])
     # print chain_info
 
-    unitid1 = request.args['unitid1']
-    unitid2 = request.args['unitid2']
+    unitid1 = request.args['start']
+    unitid2 = request.args['end']
     # unitid3 = request.args['unitid3']
+
+    pdb_test = (('4YBB', 'AA'), ('5JC9', 'AA'), ('4V9D', 'BA'), ('4V9P', 'FA'), ('3JA1', 'SA'))
+
+    pdb_test2= (('4YBB', 'AA'), ('5JC9', 'AA'), ('4WOI', 'AA'), ('4V9P', 'FA'), ('5J7L', 'BA'), ('5KCS', '1a'), ('5KPS', '27'), ('5UYN', 'A'), ('5KPX', '26'), ('3JBU', 'A'), ('5NP6', 'D'), ('3JA1', 'SA'), ('5U4J', 'a'))
+
+    pdb_small = [('4YBB', 'AA'), ('5JC9', 'AA'), ('4WOI', 'AA'), ('4V9P', 'FA'), ('5J7L', 'BA'), ('4V9P', 'DA'), ('5J8A', 'BA'), ('5J91', 'AA'), ('5JC9', 'BA'), ('4V9O', 'DA'), ('4V57', 'CA'), ('4V52', 'AA'), ('4U27', 'AA'), ('4V7V', 'AA'), ('4WF1', 'AA'), ('4U1U', 'AA'), ('4U26', 'AA'), ('4V9D', 'AA'), ('4V7S', 'AA'), ('5IT8', 'BA'), ('4V9D', 'BA'), ('4U27', 'CA'), ('4V53', 'AA'), ('4V7U', 'AA'), ('4V50', 'CA'), ('4WWW', 'XA'), ('4U20', 'AA'), ('4U1U', 'CA'), ('4U1V', 'AA'), ('4V6C', 'CA'), ('4V4Q', 'AA'), ('4V85', 'AA'), ('4V7T', 'CA'), ('4U24', 'CA'), ('4V6D', 'AA'), ('4V89', 'AA'), ('4V6D', 'CA'), ('4V6E', 'AA'), ('4V9C', 'AA'), ('4V6E', 'CA'), ('4V5B', 'DA'), ('4V4H', 'CA'), ('5J5B', 'BA'), ('5NWY', '0'), ('3R8N', 'A'), ('5WDT', 'a'), ('5MDV', '2'), ('6ENU', 'a'), ('6ENF', 'a'), ('5U9F', 'A'), ('5UYM', 'A'), ('5MDZ', '2'), ('4V80', 'AA'), ('5O2R', 'a'), ('5LZD', 'a'), ('6BU8', 'A'), ('5U4I', 'a'), ('5KCR', '1a'), ('3JBV', 'A'), ('5LZA', 'a'), ('5JU8', 'AA'), ('6ENJ', 'a'), ('3JCD', 'a'), ('6DNC', 'A'), ('5UYP', 'A'), ('5KPW', '26'), ('5KCS', '1a'), ('5UYN', 'A'), ('3JBU', 'A'), ('3JA1', 'SA')]
+
+    pdb_large = [('4YBB', 'AA'), ('5J8A', 'AA'), ('5JC9', 'AA'), ('4WOI', 'DA'), ('4WOI', 'AA'), ('5IT8', 'AA'), ('4V9P', 'FA'), ('4V9O', 'BA'), ('5J7L', 'BA'), ('4V9P', 'HA'), ('4V9P', 'DA'), ('4V9P', 'BA'), ('5J8A', 'BA'), ('4V9O', 'FA'), ('5J91', 'AA'), ('4V6C', 'AA'), ('5JC9', 'BA'), ('4V52', 'CA'), ('4V9O', 'DA'), ('4V7T', 'AA'), ('4V57', 'CA'), ('4WWW', 'QA'), ('4V52', 'AA'), ('4V57', 'AA'), ('4U27', 'AA'), ('5J88', 'AA'), ('4V7V', 'AA'), ('4V54', 'CA'), ('4WF1', 'AA'), ('4YBB', 'BA'), ('4U1U', 'AA'), ('4V64', 'CA'), ('4U26', 'AA'), ('4V53', 'CA'), ('4V9D', 'AA'), ('4U24', 'AA'), ('4V7S', 'AA'), ('4U25', 'AA'), ('5IT8', 'BA'), ('4V56', 'CA'), ('4V9D', 'BA'), ('4V54', 'AA'), ('4U27', 'CA'), ('4V64', 'AA'), ('4V53', 'AA'), ('4V56', 'AA'), ('4V7U', 'AA'), ('4V55', 'CA'), ('4V50', 'CA'), ('4V9O', 'HA'), ('4WWW', 'XA'), ('4V4Q', 'CA'), ('4U20', 'AA'), ('4V55', 'AA'), ('4U1U', 'CA'), ('4V50', 'AA'), ('4U1V', 'AA'), ('4U25', 'CA'), ('4V6C', 'CA'), ('5J88', 'BA'), ('4V4Q', 'AA'), ('4U26', 'CA'), ('4V85', 'AA'), ('5J91', 'BA'), ('4V7T', 'CA'), ('4WF1', 'CA'), ('4U24', 'CA'), ('4U1V', 'CA'), ('4V6D', 'AA'), ('4U20', 'CA'), ('4V89', 'AA'), ('4V7S', 'CA'), ('4V6D', 'CA'), ('4V7V', 'CA'), ('4V6E', 'AA'), ('4V9C', 'CA'), ('4V9C', 'AA'), ('4V7U', 'CA'), ('4V6E', 'CA'), ('4V5B', 'BA'), ('4V5B', 'DA'), ('5J5B', 'AA'), ('4V4H', 'CA'), ('4V4H', 'AA'), ('5J5B', 'BA'), ('5AFI', 'a'), ('5NWY', '0'), ('3R8O', 'A'), ('3R8N', 'A'), ('5H5U', 'h'), ('5WDT', 'a'), ('5WFS', 'a'), ('5MDV', '2'), ('5MGP', 'a'), ('6ENU', 'a'), ('5WE4', 'a'), ('6ENF', 'a'), ('5U9G', 'A'), ('5U9F', 'A'), ('3JCE', 'a'), ('5UYM', 'A'), ('5MDW', '2'), ('5MDZ', '2'), ('6C4I', 'a'), ('4V80', 'AA'), ('4V80', 'CA'), ('5O2R', 'a'), ('5WFK', 'a'), ('5LZD', 'a'), ('5WE6', 'a'), ('6BU8', 'A'), ('5MDY', '2'), ('5U4I', 'a'), ('5UYL', 'A'), ('5KCR', '1a'), ('5IQR', '2'), ('3JBV', 'A'), ('5WF0', 'a'), ('5LZA', 'a'), ('5JTE', 'AA'), ('5JU8', 'AA'), ('3JCJ', 'g'), ('6ENJ', 'a'), ('3J9Z', 'SA'), ('3JCD', 'a'), ('5L3P', 'a'), ('6DNC', 'A'), ('5UYQ', 'A'), ('5UYP', 'A'), ('5UYK', 'A'), ('5KPW', '26'), ('3J9Y', 'a'), ('5KCS', '1a'), ('5KPS', '27'), ('5UYN', 'A'), ('5KPX', '26'), ('3JBU', 'A'), ('5NP6', 'D'), ('3JA1', 'SA'), ('5U4J', 'a')]
 
     # ife1 = '|'.join(unitid1.split('|')[:3])
     pdb = unitid1.split('|')[0]
@@ -45,7 +57,6 @@ def correspondence():
     chain_index2 = unitid2.split('|')[-1]
 
     # get list of unit ids as specified by the range
-
     units_list = []
     units_query = UnitInfo.query.filter_by(pdb_id = pdb, chain = chain_info).\
                                       filter(UnitInfo.chain_index.between(chain_index1, chain_index2))\
@@ -53,154 +64,143 @@ def correspondence():
     for row in units_query:
         units_list.append(row.unit_id)
 
+    # query nts as a string
+    query_nts = ', '.join(units_list)
 
+    query_len = len(units_list)
 
-
-
-
-    # Need to automate this part
+    ordering = case(
+        {id: index for index, id in enumerate(units_list)},
+        value=UnitCorrespondence.unit_id_1
+    )
     '''
-    res1_correspondence = []
-    res1_correspondence_query = UnitCorrespondence.query.filter_by(unit_id_1=unitid1).limit(10).all()
-    for row in res1_correspondence_query:
-        res1_correspondence.append(row.unit_id_2)
+    # Database query for getting the corresponding units from the query nts
+    Need to write a function to get the members from an EC given the query
+    The query can be a
+    i) A string of unit_ids
+    ii) Loop_ids
+    iii) Or range of nucleotides
+    '''
+    correspondence_query = UnitCorrespondence.query.filter(UnitCorrespondence.unit_id_1.in_(units_list))\
+                                                   .order_by(ordering)\
+                                                   .filter(tuple_(UnitCorrespondence.pdb_id_2, UnitCorrespondence.chain_name_2)\
+                                                   .in_(pdb_test2))\
+                                                   #.limit(100)
 
-    res2_correspondence = []
-    res2_correspondence_query = UnitCorrespondence.query.filter_by(unit_id_1=unitid2).limit(10).all()
-    for row in res2_correspondence_query:
-        res2_correspondence.append(row.unit_id_2)
 
-    res3_correspondence = []
-    res3_correspondence_query = UnitCorrespondence.query.filter_by(unit_id_1=unitid3).limit(10).all()
-    for row in res3_correspondence_query:
-        res3_correspondence.append(row.unit_id_2)
+    result = [[unit.unit_id_2 for unit in units] for unit_id_1, units in itertools.groupby(correspondence_query, lambda x: x.unit_id_1)]
 
-    combined_res = zip(res1_correspondence, res2_correspondence, res3_correspondence)
+    newresult = zip(*result)
 
-    ifes = []
-    for elem in combined_res:
-        ifes.append(elem[0][:8])
+    # Create lists for residue type and number
+    unit_list = []
+    res_num = []
+    res_type = []
+    for units in newresult:
+        unit_list.append(units[0])
+        for unit in units:
+            res_num.append(unit.split('|')[-1])
+            res_type.append(unit.split('|')[-2])
+        # ife = '|'.join(units[0].split('|')[:3])
+        # unit_list.append(ife)
 
-    coord = []
-    for x in combined_res:
+    res_num_list = [res_num[i:i + query_len] for i in range(0, len(res_num), query_len)]
+    res_type_list = [res_type[i:i + query_len] for i in range(0, len(res_type), query_len)]
+
+    # res_data = [list(i) for i in zip(res_type_list, res_num_list)]
+
+    res_info_list = []
+    for base in res_type_list:
+        for num in res_num_list:
+            res_info = ["{}{}".format(k, v) for k, v in zip(base, num)]
+            res_info_list.append(res_info)
+
+    # Create list of IFES
+    ife_list = []
+    for elem in unit_list:
+        ife = '|'.join(elem.split('|')[:3])
+        ife_list.append(ife)
+
+    # Create list of coordinates as strings
+    coord_unordered = []
+    for x in newresult:
         x = ','.join(x)
-        coord.append(x)
+        coord_unordered.append(x)
 
-    ife_full = dict(zip(ifes, coord))
+    # Create a dictionary of ifes with coordinate data
+    ife_coord = dict(zip(ife_list, coord_unordered))
 
-    c1 = []
-    c2 = []
-    c3 = []
+    # Create list of res number as strings
+    res_num_ordered = []
+    for res in res_num_list:
+        res = ','.join(res)
+        res_num_ordered.append(res)
 
-    unitid_c1 = []
-    unitid_c2 = []
-    unitid_c3 = []
+    # Create list to store the centers np array
+    units_center = []
+    units_num_center = []
 
-    ordering = case(
-        {unit_id: index for index, unit_id in enumerate(res1_correspondence)},
-        value=UnitCenters.unit_id
-    )
+    # This section of the code deals with the database query to get the centers data
+    for units in newresult:
 
-    res1_center_query = UnitCenters.query.filter(UnitCenters.unit_id.in_(res1_correspondence),
-                                                 UnitCenters.name == 'base').order_by(ordering).limit(10).all()
-    for row in res1_center_query:
-        c1.append(np.array([row.x, row.y, row.z]))
-        unitid_c1.append(row.unit_id)
+        ordering = case(
+            {id: index for index, id in enumerate(units)},
+            value=UnitCenters.unit_id
+        )
 
-    ordering = case(
-        {unit_id: index for index, unit_id in enumerate(res2_correspondence)},
-        value=UnitCenters.unit_id
-    )
+        centers_query = UnitCenters.query.filter(UnitCenters.unit_id.in_(units),
+                                                 UnitCenters.name == 'base').order_by(ordering)
+        for row in centers_query:
+            units_center.append(np.array([row.x, row.y, row.z]))
+            units_num_center.append(row.unit_id)
 
-    res2_center_query = UnitCenters.query.filter(UnitCenters.unit_id.in_(res2_correspondence),
-                                                 UnitCenters.name == 'base').order_by(ordering).limit(10).all()
-    for row in res2_center_query:
-        c2.append(np.array([row.x, row.y, row.z]))
-        unitid_c2.append(row.unit_id)
+    units_center_list = [units_center[i:i+query_len] for i in range(0, len(units_center), query_len)]
 
-    ordering = case(
-        {unit_id: index for index, unit_id in enumerate(res3_correspondence)},
-        value=UnitCenters.unit_id
-    )
+    # Create list to store the rotation np array
+    units_rotation = []
+    units_num_rotation = []
 
-    res3_center_query = UnitCenters.query.filter(UnitCenters.unit_id.in_(res3_correspondence),
-                                                 UnitCenters.name == 'base').order_by(ordering).limit(10).all()
-    for row in res3_center_query:
-        c3.append(np.array([row.x, row.y, row.z]))
-        unitid_c3.append(row.unit_id)
+    # This section of the code deals with the database query to get the rotation data
+    for units in newresult:
 
-    newcenter = zip(c1, c2, c3)
+        ordering = case(
+            {id: index for index, id in enumerate(units)},
+            value=UnitRotations.unit_id
+        )
 
-    # zipped_unitid_c = zip(unitid_c1, unitid_c2, unitid_c3)
+        rotation_query = UnitRotations.query.filter(UnitRotations.unit_id.in_(units)).order_by(ordering)
 
-    r1 = []
-    r2 = []
-    r3 = []
+        for row in rotation_query:
+            units_rotation.append(np.array([[row.cell_0_0, row.cell_0_1, row.cell_0_2],
+                                            [row.cell_1_0, row.cell_1_1, row.cell_1_2],
+                                            [row.cell_2_0, row.cell_2_1, row.cell_2_2]]))
+            units_num_rotation.append(row.unit_id)
 
-    unitid_r1 = []
-    unitid_r2 = []
-    unitid_r3 = []
+    units_rotation_list = [units_rotation[i:i+query_len] for i in range(0, len(units_rotation), query_len)]
 
-    ordering = case(
-        {unit_id: index for index, unit_id in enumerate(res1_correspondence)},
-        value=UnitRotations.unit_id
-    )
+    start_time = time.time()
 
-    res1_rotation_query = UnitRotations.query.filter(UnitRotations.unit_id.in_(res1_correspondence)).order_by(
-        ordering).limit(10).all()
-    for row in res1_rotation_query:
-        r1.append(np.array([[row.cell_0_0, row.cell_0_1, row.cell_0_2],
-                            [row.cell_1_0, row.cell_1_1, row.cell_1_2],
-                            [row.cell_2_0, row.cell_2_1, row.cell_2_2]]))
-        unitid_r1.append(row.unit_id)
-
-    ordering = case(
-        {unit_id: index for index, unit_id in enumerate(res2_correspondence)},
-        value=UnitRotations.unit_id
-    )
-
-    res2_rotation_query = UnitRotations.query.filter(UnitRotations.unit_id.in_(res2_correspondence)).order_by(
-        ordering).limit(10).all()
-    for row in res2_rotation_query:
-        r2.append(np.array([[row.cell_0_0, row.cell_0_1, row.cell_0_2],
-                            [row.cell_1_0, row.cell_1_1, row.cell_1_2],
-                            [row.cell_2_0, row.cell_2_1, row.cell_2_2]]))
-        unitid_r2.append(row.unit_id)
-
-    ordering = case(
-        {unit_id: index for index, unit_id in enumerate(res3_correspondence)},
-        value=UnitRotations.unit_id
-    )
-
-    res3_rotation_query = UnitRotations.query.filter(UnitRotations.unit_id.in_(res3_correspondence)).order_by(
-        ordering).limit(10).all()
-    for row in res3_rotation_query:
-        r3.append(np.array([[row.cell_0_0, row.cell_0_1, row.cell_0_2],
-                            [row.cell_1_0, row.cell_1_1, row.cell_1_2],
-                            [row.cell_2_0, row.cell_2_1, row.cell_2_2]]))
-        unitid_r3.append(row.unit_id)
-
-    newrotation = zip(r1, r2, r3)
-
-    zipped_unitid_r = zip(unitid_r1, unitid_r2, unitid_r3)
-
-    # This part deals with calculating the discepancy for the corresponding instances
+    # This section of the code deals with calculating the discrepancy for the corresponding instances
     distances = coll.defaultdict(lambda: coll.defaultdict(int))
-    corr1 = []
-    corr2 = []
 
-    for a in range(0, len(combined_res)):
-        for b in range(a + 1, len(combined_res)):
-            corr1.append(combined_res[a])
-            corr2.append(combined_res[b])
-            disc = matrix_discrepancy(newcenter[a], newrotation[a], newcenter[b], newrotation[b])
-            distances[combined_res[a][0][:8]][combined_res[b][0][:8]] = disc
+    for a in range(0, len(ife_list)):
+        for b in range(0, len(ife_list)):
+        #for b in range(a + 1, len(ife_list)):
+            disc = matrix_discrepancy(units_center_list[a], units_rotation_list[a], units_center_list[b], units_rotation_list[b])
+            ife_a = '|'.join(ife_list[a].split('|')[:3])
+            ife_b = '|'.join(ife_list[b].split('|')[:3])
+            distances [ife_a][ife_b] = disc
 
-    dist = np.zeros((len(ifes), len(ifes)))
-    for index1, member1 in enumerate(ifes):
+    end_time = time.time()
+
+    disc_time = end_time - start_time
+
+
+    dist = np.zeros((len(ife_list), len(ife_list)))
+    for index1, member1 in enumerate(ife_list):
 
         curr = distances.get(member1, {})
-        for index2, member2 in enumerate(ifes):
+        for index2, member2 in enumerate(ife_list):
             val = curr.get(member2, None)
             if member2 not in curr:
                 val = None
@@ -208,13 +208,13 @@ def correspondence():
 
     ordering, _, _ = orderWithPathLengthFromDistanceMatrix(dist, 10, scanForNan=True)
 
-    neworder = [x for x in sorted(zip(ordering, ifes))]
+    # Order the list of ifes based on the new ordering
+    ifes_ordered = [x for x in sorted(zip(ordering, ife_list))]
 
     coord_ordered = []
-
     # append the coordinates based on new ordering
-    for index in neworder:
-        for key, val in ife_full.iteritems():
+    for index in ifes_ordered:
+        for key, val in ife_coord.iteritems():
             if index[1] == key:
                 coord_ordered.append(val)
 
@@ -227,30 +227,26 @@ def correspondence():
     ife1 = []
     ife2 = []
 
-    for x in neworder:
-        for y in neworder:
-            index1.append(x[0])
-            ife1.append(x[1])
-            index2.append(y[0])
-            ife2.append(y[1])
+    for member1 in ifes_ordered:
+        for member2 in ifes_ordered:
+            index1.append(member1[0])
+            ife1.append(member1[1])
+            index2.append(member2[0])
+            ife2.append(member2[1])
 
     ife_pairs = zip(ife1, ife2)
 
     disc_ordered = [get(distances, first, second) or get(distances, second, first) for first, second in ife_pairs]
 
     heatmap_data = [
-        {"ife1": ife1, "ife1_index": ife1_index, "ife2": ife2, "ife2_index": ife2_index, "discrepancy": discrepancy} for
-        ife1, ife1_index, ife2, ife2_index, discrepancy in zip(ife1, index1, ife2, index2, disc_ordered)]
+        {"ife1": ife1, "ife1_index": ife1_index, "ife2": ife2, "ife2_index": ife2_index, "discrepancy": discrepancy}
+        for ife1, ife1_index, ife2, ife2_index, discrepancy in zip(ife1, index1, ife2, index2, disc_ordered)
+        ]
 
     heatmap_data = json.dumps(heatmap_data, ensure_ascii=False)
 
-    # return json.dumps(zipped_unitid_r)
-
-    return render_template("correspondence_disc.html", query_res1=unitid1, query_res2=unitid2, query_res3=unitid3,
-    ife=neworder, coord=coord_ordered, data=heatmap_data)
-    '''
-
-    return json.dumps(units_list)
+    return render_template("correspondence_disc.html", query_pdb=pdb, disc_time=disc_time, query_nts=query_nts, coord=coord_ordered, ifes=ifes_ordered, res_list=coord_ordered, data=heatmap_data)
+    # return json.dumps(disc_time)
 
 
 if __name__ == '__main__':
