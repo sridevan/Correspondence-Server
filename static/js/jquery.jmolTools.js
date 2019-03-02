@@ -713,13 +713,13 @@ if ( typeof Object.create !== 'function' ) {
     var loc = window.location.protocol + '//' + window.location.hostname;
     // default options
     $.fn.jmolTools.options = {
-        serverUrlCoord   : 'http://localhost:8888/RNA-3D-Hub/rest/getCoordinates',
+        serverUrlCoord   : 'http://rna.bgsu.edu/rna3dhub/rest/getCoordinates',
         dataAttributeCoord: 'coord',
 
-        serverUrlRSR   : 'http://localhost:8888/RNA-3D-Hub/rest/getRSR',
+        serverUrlRSR   : 'http://rna.bgsu.edu/rna3dhub/rest/getRSR',
         dataAttributeRSR: 'quality',
 
-        serverUrlRSRZ   : 'http://localhost:8888/RNA-3D-Hub/rest/getRSRZ',
+        serverUrlRSRZ   : 'http://rna.bgsu.edu/rna3dhub/rest/getRSRZ',
         dataAttributeRSRZ: 'quality',
 
         toggleCheckbox: true,      // by default each model will monitor the checked state of its corresponding checkbox
