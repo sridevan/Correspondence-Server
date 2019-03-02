@@ -71,9 +71,7 @@
 
   var data = JSON.parse(data.replace(/\bNaN\b/g, "null"));
 
-  //console.log(result)
-
-  //var data = JSON.parse(data);
+  // var data = JSON.parse(data);
 
   // get the unique values of the ife's in an ordered list
   var lookup = {};
