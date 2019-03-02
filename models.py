@@ -18,6 +18,7 @@ class UnitCorrespondence(db.Model):
     unit_id_2 = db.Column(db.String, primary_key=True)
     pdb_id_1 = db.Column(db.String, primary_key=True)
     pdb_id_2 = db.Column(db.String, primary_key=True)
+    chain_name_2 = db.Column(db.String, primary_key=True)
 
     # def __init__(self, unit_id_1, unit_id_2, pdb_id_1, pdb_id_2):
     # self.unit_id_1 = unit_id_1
