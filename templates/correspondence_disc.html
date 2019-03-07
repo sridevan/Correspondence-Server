@@ -3,14 +3,17 @@
 {% block html %}
   
   {% block head %}
-    
+
     {% block title %}
+      <div class="col-sm-12">
       <title>Correspondence Server</title>
       <h3>Correspondence Server Homepage</h3>
+      </div>
     {% endblock %}
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="static/bootstrap.min.css" rel="stylesheet" media="screen">
+    <link href="/static/bootstrap.min.css" rel="stylesheet" media="screen">
+    <!--<link href="/static/styling.css" rel="stylesheet" media="screen">-->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js" type="text/javascript"></script>
     <script src="/static/js/jsmol/JSmol.min.nojq.js"></script>
     <script src="/static/js/jquery.jmolTools.js"></script>
@@ -66,7 +69,7 @@
     
     {% block content %}
       
-      <div class="query-info">
+      <div class="col-sm-12">
           <h5>Query PDB structure: <span style="font-weight:normal"> {{ query_pdb}} </span></h5>
           <h5>Query nucleotides: <span style="font-weight:normal"> {{ query_nts}} </span></h5>
 
@@ -74,28 +77,24 @@
         </br>
       </div>
 
-      <div class = "display-corr"> 
-        <div class="col-sm-8">
+        <div class="col-sm-4" >
 
-          <table class="table table-bordered">
+          <table class="table table-bordered" width="50%">
             <tr>
               <th scope="col">Num</th>
               <th scope="col">Chain</th>
-              <th scope="col">Corresponding Residues</th>
+              <!--<th scope="col">Corresponding Residues</th>-->
             </tr>
             {% for x in range(0, coord|length) %}
             <tr>
               <td><input type='checkbox' id='{{[x]}}' class='jmolInline' data-coord = '{{coord[x]}}' data-quality = '{{coord[x]}}'>{{x}}</td>
                 <td>{{ ifes[x][1] }}</td>
-                <td>{{ res_list[x] }}</td>
             </tr>
             {% endfor %}
           </table>
 
         </div>
-      </div>
 
-      <div class = "viewer" align = "center">
         <div class="col-sm-4">
 
           <script type="text/javascript">
@@ -125,32 +124,32 @@
           <label><input type="checkbox" id="showNtNums">Nucleotide numbers</label>
           <!--<label><input type="checkbox" id="stereo1">Stereo</label>-->
           <input type="button" id="stereo2" value="Stereo">
+
           Coloring options: <select id="colorOPT">
                           <option value="Default" selected>Default</option>
                           <option value="CPK">CPK</option>
                           <option value="RSR">Real Space R (RSR)</option>
-                          <option value="RSRZ">RSR Z-Score (RSRZ)</option>
-          </select>
-
-            <div class="heatmap" align="left">
-
-        
-          <div id ='chart' style="text-align: center;"></div>
-
-          <script src="//d3js.org/d3.v4.min.js"></script>
-          <script type="text/javascript">
-             var data = {{ data | tojson | safe }};
-          </script>
-          <script type="text/javascript" src="/static/js/heatmap.js"></script>
-            
-
-        
-          </div>
-            
+                          <option value="RSRZ">RSR Z-Score (RSRZ)</option></select>
 
         </div>
 
-      </div>
+        <div class="col-sm-4">
+
+        
+            <div id ='chart' style="text-align: right;">
+
+            <script src="//d3js.org/d3.v4.min.js"></script>
+            <script type="text/javascript">
+                var data = {{ data | tojson | safe }};
+            </script>
+            <script type="text/javascript" src="/static/js/heatmap.js"></script>
+            
+
+        
+            </div>
+            
+
+        </div>
 
       
       {% endblock %}    
