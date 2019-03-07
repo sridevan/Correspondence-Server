@@ -5,18 +5,19 @@ from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
 import numpy as np
 import itertools
+import random
 import time
 from numpy import nan
 
 np.set_printoptions(threshold=np.nan)
 from sqlalchemy.sql.expression import case
+from sqlalchemy.orm import relationship
 
 # from models import UnitCorrespondence
 # from flask_marshmallow import Marshmallow
 
-
 app = Flask(__name__)
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@127.0.0.1/rna3dhub?unix_socket=/Applications/MAMP/tmp/mysql/mysql.sock'
 Bootstrap(app)
 db = SQLAlchemy(app)
@@ -38,13 +39,9 @@ def correspondence():
     # chain_info = '|'.join(unitid.split('|')[:3])
     # print chain_info
 
-    pdb_test = (('4YBB', 'AA'), ('5JC9', 'AA'), ('4V9D', 'BA'), ('4V9P', 'FA'), ('3JA1', 'SA'))
+    pdb_complete = [('5J7L', 'AA'), ('4YBB', 'AA'), ('5J8A', 'AA'), ('5JC9', 'AA'), ('4WOI', 'DA'), ('4WOI', 'AA'), ('5IT8', 'AA'), ('4V9P', 'FA'), ('4V9O', 'BA'), ('5J7L', 'BA'), ('4V9P', 'HA'), ('4V9P', 'DA'), ('4V9P', 'BA'), ('5J8A', 'BA'), ('4V9O', 'FA'), ('5J91', 'AA'), ('4V6C', 'AA'), ('5JC9', 'BA'), ('4V52', 'CA'), ('4V9O', 'DA'), ('4V7T', 'AA'), ('4V57', 'CA'), ('4WWW', 'QA'), ('4V52', 'AA'), ('4V57', 'AA'), ('4U27', 'AA'), ('5J88', 'AA'), ('4V7V', 'AA'), ('4V54', 'CA'), ('4WF1', 'AA'), ('4YBB', 'BA'), ('4U1U', 'AA'), ('4V64', 'CA'), ('4U26', 'AA'), ('4V53', 'CA'), ('4V9D', 'AA'), ('4U24', 'AA'), ('4V7S', 'AA'), ('4U25', 'AA'), ('5IT8', 'BA'), ('4V56', 'CA'), ('4V9D', 'BA'), ('4V54', 'AA'), ('4U27', 'CA'), ('4V64', 'AA'), ('4V53', 'AA'), ('4V56', 'AA'), ('4V7U', 'AA'), ('4V55', 'CA'), ('4V50', 'CA'), ('4V9O', 'HA'), ('4WWW', 'XA'), ('4V4Q', 'CA'), ('4U20', 'AA'), ('4V55', 'AA'), ('4U1U', 'CA'), ('4V50', 'AA'), ('4U1V', 'AA'), ('4U25', 'CA'), ('4V6C', 'CA'), ('5J88', 'BA'), ('4V4Q', 'AA'), ('4U26', 'CA'), ('4V85', 'AA'), ('5J91', 'BA'), ('4V7T', 'CA'), ('4WF1', 'CA'), ('4U24', 'CA'), ('4U1V', 'CA'), ('4V6D', 'AA'), ('4U20', 'CA'), ('4V89', 'AA'), ('4V7S', 'CA'), ('4V6D', 'CA'), ('4V7V', 'CA'), ('4V6E', 'AA'), ('4V9C', 'CA'), ('4V9C', 'AA'), ('4V7U', 'CA'), ('4V6E', 'CA'), ('4V5B', 'BA'), ('4V5B', 'DA'), ('5J5B', 'AA'), ('4V4H', 'CA'), ('4V4H', 'AA'), ('5J5B', 'BA'), ('5AFI', 'a'), ('5NWY', '0'), ('3R8O', 'A'), ('3R8N', 'A'), ('5H5U', 'h'), ('5WDT', 'a'), ('5WFS', 'a'), ('5MDV', '2'), ('5MGP', 'a'), ('6ENU', 'a'), ('5WE4', 'a'), ('6ENF', 'a'), ('5U9G', 'A'), ('5U9F', 'A'), ('3JCE', 'a'), ('5UYM', 'A'), ('5MDW', '2'), ('5MDZ', '2'), ('6C4I', 'a'), ('4V80', 'AA'), ('4V80', 'CA'), ('5O2R', 'a'), ('5WFK', 'a'), ('5LZD', 'a'), ('5WE6', 'a'), ('6BU8', 'A'), ('5MDY', '2'), ('5U4I', 'a'), ('5UYL', 'A'), ('5KCR', '1a'), ('5IQR', '2'), ('3JBV', 'A'), ('5WF0', 'a'), ('5LZA', 'a'), ('5JTE', 'AA'), ('5JU8', 'AA'), ('3JCJ', 'g'), ('6ENJ', 'a'), ('3J9Z', 'SA'), ('3JCD', 'a'), ('5L3P', 'a'), ('6DNC', 'A'), ('5UYQ', 'A'), ('5UYP', 'A'), ('5UYK', 'A'), ('5KPW', '26'), ('3J9Y', 'a'), ('5KCS', '1a'), ('5KPS', '27'), ('5UYN', 'A'), ('5KPX', '26'), ('3JBU', 'A'), ('5NP6', 'D'), ('3JA1', 'SA'), ('5U4J', 'a')]
 
-    pdb_test2 = (
-        ('4YBB', 'AA'), ('5JC9', 'AA'), ('4WOI', 'AA'), ('4V9P', 'FA'), ('5J7L', 'BA'), ('5KCS', '1a'), ('5KPS', '27'),
-        ('5UYN', 'A'), ('5KPX', '26'), ('3JBU', 'A'), ('5NP6', 'D'), ('3JA1', 'SA'), ('5U4J', 'a'))
-
-    pdb_test3 = (('4YBB', 'AA'), ('5JC9', 'AA'), ('4WOI', 'AA'), ('5U4J', 'a'))
+    pdb_truncated = random.sample(pdb_complete, 50)
 
     data = request.args['units']
 
@@ -54,7 +51,11 @@ def correspondence():
     query_pdb = query_list[0][0].split('|')[0]
     query_chain = query_list[0][0].split('|')[2]
 
-    # query_units = ranges(query_list, query_pdb, query_chain)
+    '''
+    ife_query = NrClasses.query.join(NrReleases, NrClasses, NrChains)\
+                  .filter(NrChains.ife_id == '5J7L|1|AA').filter(NrClasses.resolution == '4.0')\
+                  .order_by(NrReleases.date.desc()).limit(1)
+    '''
 
     units_list = []
 
@@ -81,7 +82,7 @@ def correspondence():
     correspondence_query = UnitCorrespondence.query.filter(UnitCorrespondence.unit_id_1.in_(units_list)) \
         .order_by(ordering) \
         .filter(tuple_(UnitCorrespondence.pdb_id_2, UnitCorrespondence.chain_name_2) \
-                .in_(pdb_test2))
+                .in_(pdb_truncated))
 
     corr_test = []
     for row in correspondence_query:
@@ -234,9 +235,9 @@ def correspondence():
     heatmap_data = json.dumps(heatmap_data, ensure_ascii=False)
 
     return render_template("correspondence_disc.html", query_pdb=query_pdb, disc_time=disc_time, query_nts=query_nts,
-                           coord=coord_ordered, ifes=ifes_ordered, res_list=coord_ordered, data=heatmap_data)
+                          coord=coord_ordered, ifes=ifes_ordered, res_list=coord_ordered, data=heatmap_data)
 
-    # return json.dumps(units_center_list)
+    #return json.dumps(pdb_truncated)
 
 
 if __name__ == '__main__':
