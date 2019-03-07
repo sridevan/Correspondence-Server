@@ -55,3 +55,32 @@ class UnitRotations(db.Model):
     cell_2_0 = db.Column(db.Float)
     cell_2_1 = db.Column(db.Float)
     cell_2_2 = db.Column(db.Float)
+
+class NrReleases(db.Model):
+    __tablename__ = "nr_releases"
+
+    nr_release_id = db.Column(db.String, primary_key=True)
+    date = db.Column(db.Date)
+    classes = db.relationship("NrClasses", backref='nr_releases', lazy=True)
+
+class NrClasses(db.Model):
+    __tablename__ = "nr_classes"
+
+    nr_class_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String)
+    nr_release_id = db.Column(db.String, db.ForeignKey("nr_releases.nr_release_id"))
+    resolution = db.Column(db.String)
+    chains = db.relationship("NrChains", backref='nr_classes', lazy=True)
+
+class NrChains(db.Model):
+    __tablename__ = "nr_chains"
+
+    nr_chain_id = db.Column(db.Integer, primary_key=True)
+    ife_id = db.Column(db.String)
+    nr_class_id = db.Column(db.Integer, db.ForeignKey("nr_classes.nr_class_id"))
+    nr_release_id = db.Column(db.String, db.ForeignKey("nr_releases.nr_release_id"))
+
+
+
+
+
