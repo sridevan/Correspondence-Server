@@ -9,7 +9,7 @@ import collections as coll
 
 from werkzeug.exceptions import BadRequest
 
-PARTS_LIMIT = 5
+PARTS_LIMIT = 15
 
 def input_type(data):
 
