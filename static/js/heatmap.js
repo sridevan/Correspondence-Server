@@ -71,9 +71,7 @@
 
   var data = JSON.parse(data.replace(/\bNaN\b/g, "null"));
 
-  //console.log(result)
-
-  //var data = JSON.parse(data);
+  // var data = JSON.parse(data);
 
   // get the unique values of the ife's in an ordered list
   var lookup = {};
@@ -96,9 +94,9 @@
   console.log(ife_nr_size)
 
   // Set the dimensions of the canvas
-  var margin = {top: 20, right: 10, bottom: 70, left: 90},
-    width = 500 - margin.left - margin.right,
-    height = (500 - margin.top - margin.bottom),
+  var margin = {top: 20, right: 40, bottom: 70, left: 20},
+    width = 400 - margin.left - margin.right,
+    height = (400 - margin.bottom),
     gridSize = Math.round10((width / ife_nr_size), -1),
     legendElementWidth = gridSize * ife_nr_size,
     new_width = gridSize * ife_nr_size;
@@ -263,7 +261,7 @@
         .attr('y1', height)
         .attr("width", width)
         .attr("height", 15)
-        .attr("transform", "translate(" + 0 + "," + (height + 5) + ")")
+        .attr("transform", "translate(" + 0 + "," + (height + 20) + ")")
         .style("fill", "url(#linear-gradient)");
 
       /* create a scale for the legend
@@ -294,5 +292,5 @@
         .attr("class", "legend axis")
         //.attr("height", 80)
         .text('Discrepancy')
-        .attr("transform", "translate(" + 0 + "," + (height + 17) + ")")
+        .attr("transform", "translate(" + 0 + "," + (height + 30) + ")")
         .call(legendAxis);
