@@ -43,6 +43,10 @@ def correspondence():
 
     pdb_truncated = random.sample(pdb_complete, 50)
 
+    pdb_test = [('3JCD', 'a'), ('3R8N', 'A'), ('3JCJ', 'g'), ('5NP6', 'D'), ('6H4N', 'a'), ('6DNC', 'A'), ('5H5U', 'h'), ('5MDV', '2'), ('6ENJ', 'a'), ('3JBU', 'A'), ('5JTE', 'AA'), ('5NWY', '0'), ('5LZD', 'a'), ('5IQR', '2'), ('5KPW', '26'), ('4V85', 'AA'), ('5AFI', 'a')]
+
+    pdb_test2 = [('3JCD', 'a'), ('3R8N', 'A'), ('3JCJ', 'g'), ('5NP6', 'D'), ('6H4N', 'a'), ('6DNC', 'A'), ('5H5U', 'h')]
+
     data = request.args['units']
 
     query_list = input_type(data)
@@ -69,10 +73,26 @@ def correspondence():
         for row in units_query:
             units_list.append(row.unit_id)
 
+    #### This section deals with getting the units of unmodified nucleotides
+
+    standard_nts = ('A', 'C', 'G', 'U')
+
+    units_std = []
+
+    for unit in units_list:
+        k = unit.split('|')[-2]
+        if k in standard_nts:
+            units_std.append(unit)
+
     # query nts as a string
     query_nts = ', '.join(units_list)
 
     query_len = len(units_list)
+
+    query_len_std = len(units_std)
+
+
+    #### This section of the code deals with getting the corresponding unit_ids from the query
 
     ordering = case(
         {id: index for index, id in enumerate(units_list)},
@@ -83,10 +103,6 @@ def correspondence():
         .order_by(ordering) \
         .filter(tuple_(UnitCorrespondence.pdb_id_2, UnitCorrespondence.chain_name_2) \
                 .in_(pdb_truncated))
-
-    corr_test = []
-    for row in correspondence_query:
-        corr_test.append(row.unit_id_2)
 
     result = [[unit.unit_id_2 for unit in units] for unit_id_1, units in
               itertools.groupby(correspondence_query, lambda x: x.unit_id_1)]
@@ -125,12 +141,29 @@ def correspondence():
     # Create a dictionary of ifes with coordinate data
     ife_coord = dict(zip(ife_list, coord_unordered))
 
+    ###################################################################################################
+
+    ordering = case(
+        {id: index for index, id in enumerate(units_std)},
+        value=UnitCorrespondence.unit_id_1
+    )
+
+    correspondence_query = UnitCorrespondence.query.filter(UnitCorrespondence.unit_id_1.in_(units_std)) \
+        .order_by(ordering) \
+        .filter(tuple_(UnitCorrespondence.pdb_id_2, UnitCorrespondence.chain_name_2) \
+                .in_(pdb_truncated))
+
+    result_std = [[unit.unit_id_2 for unit in units] for unit_id_1, units in
+              itertools.groupby(correspondence_query, lambda x: x.unit_id_1)]
+
+    newresul_std = zip(*result_std)
+
     # Create list to store the centers np array
     units_center = []
     units_num_center = []
 
     # This section of the code deals with the database query to get the centers data
-    for units in newresult:
+    for units in newresul_std:
 
         ordering = case(
             {id: index for index, id in enumerate(units)},
@@ -143,14 +176,14 @@ def correspondence():
             units_center.append(np.array([row.x, row.y, row.z]))
             units_num_center.append(row.unit_id)
 
-    units_center_list = [units_center[i:i + query_len] for i in xrange(0, len(units_center), query_len)]
+    units_center_list = [units_center[i:i + query_len_std] for i in xrange(0, len(units_center), query_len_std)]
 
     # Create list to store the rotation np array
     units_rotation = []
     units_num_rotation = []
 
     # This section of the code deals with the database query to get the rotation data
-    for units in newresult:
+    for units in newresul_std:
 
         ordering = case(
             {id: index for index, id in enumerate(units)},
@@ -165,7 +198,7 @@ def correspondence():
                                             [row.cell_2_0, row.cell_2_1, row.cell_2_2]]))
             units_num_rotation.append(row.unit_id)
 
-    units_rotation_list = [units_rotation[i:i + query_len] for i in xrange(0, len(units_rotation), query_len)]
+    units_rotation_list = [units_rotation[i:i + query_len_std] for i in xrange(0, len(units_rotation), query_len_std)]
 
     start_time = time.time()
 
@@ -237,8 +270,9 @@ def correspondence():
     return render_template("correspondence_disc.html", query_pdb=query_pdb, disc_time=disc_time, query_nts=query_nts,
                           coord=coord_ordered, ifes=ifes_ordered, res_list=coord_ordered, data=heatmap_data)
 
-    #return json.dumps(pdb_truncated)
-
+    
+    
+    #return json.dumps(newresult)
 
 if __name__ == '__main__':
     app.run(debug=True)
