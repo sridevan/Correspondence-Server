@@ -113,6 +113,7 @@
       var domainMax = d3.max(data, function(d) {return +d.discrepancy;});
       var domainMin = d3.min(data, function(d) {return +d.discrepancy;});
 
+      /*
       // Check the maximum discrepancy value. Use 0.5 if max discrepancy is above 0.5
       if (domainMax < 0.5) {
         var colorScale = d3.scaleLinear()
@@ -125,6 +126,11 @@
           .range(viridisColor)
           .clamp(true);
       }
+      */
+
+      var colorScale = d3.scaleLinear()
+          .domain(linspace(domainMin, domainMax, viridisColor.length))
+          .range(viridisColor)
 
       // Set the svg container
       var svg = d3.select("#chart").append("svg")
@@ -248,6 +254,7 @@
         .attr("transform", "translate(" + 0 + "," + (height + 5) + ")")
         .style("fill", "url(#linear-gradient)");
 
+      /*  
       // create a scale for the legend
       if (domainMax < 0.5) {
         var legendScale = d3.scaleLinear()
@@ -260,6 +267,11 @@
           .range([0, width])
           .clamp(true);
       }
+      */
+
+      var legendScale = d3.scaleLinear()
+          .domain([domainMin, domainMax])
+          .range([0, width])
 
       // create an axis for the legend
       var legendAxis = d3.axisBottom()
