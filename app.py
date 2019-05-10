@@ -43,11 +43,11 @@ def correspondence():
 
     pdb_complete = [('5J7L', 'AA'), ('4YBB', 'AA'), ('5J8A', 'AA'), ('5JC9', 'AA'), ('4WOI', 'DA'), ('4WOI', 'AA'), ('5IT8', 'AA'), ('4V9P', 'FA'), ('4V9O', 'BA'), ('5J7L', 'BA'), ('4V9P', 'HA'), ('4V9P', 'DA'), ('4V9P', 'BA'), ('5J8A', 'BA'), ('4V9O', 'FA'), ('5J91', 'AA'), ('4V6C', 'AA'), ('5JC9', 'BA'), ('4V52', 'CA'), ('4V9O', 'DA'), ('4V7T', 'AA'), ('4V57', 'CA'), ('4WWW', 'QA'), ('4V52', 'AA'), ('4V57', 'AA'), ('4U27', 'AA'), ('5J88', 'AA'), ('4V7V', 'AA'), ('4V54', 'CA'), ('4WF1', 'AA'), ('4YBB', 'BA'), ('4U1U', 'AA'), ('4V64', 'CA'), ('4U26', 'AA'), ('4V53', 'CA'), ('4V9D', 'AA'), ('4U24', 'AA'), ('4V7S', 'AA'), ('4U25', 'AA'), ('5IT8', 'BA'), ('4V56', 'CA'), ('4V9D', 'BA'), ('4V54', 'AA'), ('4U27', 'CA'), ('4V64', 'AA'), ('4V53', 'AA'), ('4V56', 'AA'), ('4V7U', 'AA'), ('4V55', 'CA'), ('4V50', 'CA'), ('4V9O', 'HA'), ('4WWW', 'XA'), ('4V4Q', 'CA'), ('4U20', 'AA'), ('4V55', 'AA'), ('4U1U', 'CA'), ('4V50', 'AA'), ('4U1V', 'AA'), ('4U25', 'CA'), ('4V6C', 'CA'), ('5J88', 'BA'), ('4V4Q', 'AA'), ('4U26', 'CA'), ('4V85', 'AA'), ('5J91', 'BA'), ('4V7T', 'CA'), ('4WF1', 'CA'), ('4U24', 'CA'), ('4U1V', 'CA'), ('4V6D', 'AA'), ('4U20', 'CA'), ('4V89', 'AA'), ('4V7S', 'CA'), ('4V6D', 'CA'), ('4V7V', 'CA'), ('4V6E', 'AA'), ('4V9C', 'CA'), ('4V9C', 'AA'), ('4V7U', 'CA'), ('4V6E', 'CA'), ('4V5B', 'BA'), ('4V5B', 'DA'), ('5J5B', 'AA'), ('4V4H', 'CA'), ('4V4H', 'AA'), ('5J5B', 'BA'), ('5AFI', 'a'), ('5NWY', '0'), ('3R8O', 'A'), ('3R8N', 'A'), ('5H5U', 'h'), ('5WDT', 'a'), ('5WFS', 'a'), ('5MDV', '2'), ('5MGP', 'a'), ('6ENU', 'a'), ('5WE4', 'a'), ('6ENF', 'a'), ('5U9G', 'A'), ('5U9F', 'A'), ('3JCE', 'a'), ('5UYM', 'A'), ('5MDW', '2'), ('5MDZ', '2'), ('6C4I', 'a'), ('4V80', 'AA'), ('4V80', 'CA'), ('5O2R', 'a'), ('5WFK', 'a'), ('5LZD', 'a'), ('5WE6', 'a'), ('6BU8', 'A'), ('5MDY', '2'), ('5U4I', 'a'), ('5UYL', 'A'), ('5KCR', '1a'), ('5IQR', '2'), ('3JBV', 'A'), ('5WF0', 'a'), ('5LZA', 'a'), ('5JTE', 'AA'), ('5JU8', 'AA'), ('3JCJ', 'g'), ('6ENJ', 'a'), ('3J9Z', 'SA'), ('3JCD', 'a'), ('5L3P', 'a'), ('6DNC', 'A'), ('5UYQ', 'A'), ('5UYP', 'A'), ('5UYK', 'A'), ('5KPW', '26'), ('3J9Y', 'a'), ('5KCS', '1a'), ('5KPS', '27'), ('5UYN', 'A'), ('5KPX', '26'), ('3JBU', 'A'), ('5NP6', 'D'), ('3JA1', 'SA'), ('5U4J', 'a')]
 
-    pdb_truncated = random.sample(pdb_complete, 20)
+    pdb_truncated = random.sample(pdb_complete, 50)
 
     pdb_test = [('3JCD', 'a'), ('3R8N', 'A'), ('3JCJ', 'g'), ('5NP6', 'D'), ('6H4N', 'a'), ('6DNC', 'A'), ('5H5U', 'h'), ('5MDV', '2'), ('6ENJ', 'a'), ('3JBU', 'A'), ('5JTE', 'AA'), ('5NWY', '0'), ('5LZD', 'a'), ('5IQR', '2'), ('5KPW', '26'), ('4V85', 'AA')]
 
-    pdb_test2 = [('3JCD', 'a'), ('3R8N', 'A'), ('3JCJ', 'g')]
+    pdb_test2 = [('3JCD', 'a'), ('3R8N', 'A'), ('3JCJ', 'g'), ('5NP6', 'D'), ('6H4N', 'a')]
 
     data = request.args['units']
 
@@ -57,7 +57,7 @@ def correspondence():
     query_pdb = query_list[0][0].split('|')[0]
     query_chain = query_list[0][0].split('|')[2]
 
-    units_list = []
+    units_complete_list = []
 
     for range_num in query_list:
         start_range = range_num[0].split('|')[-1]
@@ -67,37 +67,46 @@ def correspondence():
             .order_by(UnitInfo.chain_index).all()
 
         for row in units_query:
-            units_list.append(row.unit_id)
+            units_complete_list.append(row.unit_id)
+
+    ife_list = NrClasses.query.join(NrReleases, NrClasses, NrChains)\
+               .filter(NrChains.ife_id == '5J7L|1|11').filter(NrClasses.resolution == '4.0')\
+               .order_by(NrReleases.date.desc()).limit(1) 
 
     # query nts as a string
-    query_nts = ', '.join(units_list)
+    query_nts = ', '.join(units_complete_list)
 
-    query_len = len(units_list)
+    query_complete_len = len(units_complete_list)
+
+    #### This section deals with getting the units of unmodified nucleotides
+
+    standard_nts = ('A', 'C', 'G', 'U')
+
+    units_std_list = []
+
+    for unit in units_complete_list:
+        k = unit.split('|')[-2]
+        if k in standard_nts:
+            units_std_list.append(unit)
+
+    query_std_len= len(units_std_list)
 
     #### This section of the code deals with getting the corresponding unit_ids from the query
 
-    #ordering = case ({id2: s for s, id2 in enumerate(units_list)}, value=UnitCorrespondence.unit_id_1)
-
-    correspondence_query = UnitCorrespondence.query.filter(UnitCorrespondence.unit_id_1.in_(units_list)) \
+    correspondence_complete = UnitCorrespondence.query.filter(UnitCorrespondence.unit_id_1.in_(units_complete_list)) \
         .filter(tuple_(UnitCorrespondence.pdb_id_2, UnitCorrespondence.chain_name_2) \
         .in_(pdb_test)) 
 
-    #correspondence_map = dict((row.unit_id_1, row) for row in correspondence_query)
+    result_complete = [[unit.unit_id_2 for unit in units] for unit_id_1, units in
+              itertools.groupby(correspondence_complete, lambda x: x.unit_id_1)]
 
-    #corespondence = [correspondence_map[n] for n in units_list]  
-    
-    #correspondence_query = [next(s for s in correspondence_query if s.unit_id_1 == id) for id in units_list]
-
-    result = [[unit.unit_id_2 for unit in units] for unit_id_1, units in
-              itertools.groupby(correspondence_query, lambda x: x.unit_id_1)]
-
-    newresult = zip(*result)
+    corr_complete = zip(*result_complete)
 
     # Create lists for residue type and number
     unit_list = []
     res_num = []
     res_type = []
-    for units in newresult:
+    for units in corr_complete:
         unit_list.append(units[0])
         for unit in units:
             res_num.append(unit.split('|')[-1])
@@ -108,7 +117,7 @@ def correspondence():
     # res_num_list = [res_num[i:i + query_len] for i in range(0, len(res_num), query_len)]
     # res_type_list = [res_type[i:i + query_len] for i in range(0, len(res_type), query_len)]
 
-    res_list = [res_num[i:i + query_len] for i in xrange(0, len(res_num), query_len)]
+    res_list = [res_num[i:i + query_complete_len] for i in xrange(0, len(res_num), query_complete_len)]
 
     # Create list of IFES
     ife_list = []
@@ -118,19 +127,32 @@ def correspondence():
 
     # Create list of coordinates as strings
     coord_unordered = []
-    for x in newresult:
+    for x in corr_complete:
         x = ','.join(x)
         coord_unordered.append(x)
 
     # Create a dictionary of ifes with coordinate data
     ife_coord = dict(zip(ife_list, coord_unordered))
 
+##################################################################################
+
+    #ordering = case({id: index for index, id in enumerate(units_std)}, value=UnitCorrespondence.unit_id_1)
+
+    correspondence_std = UnitCorrespondence.query.filter(UnitCorrespondence.unit_id_1.in_(units_std_list)) \
+        .filter(tuple_(UnitCorrespondence.pdb_id_2, UnitCorrespondence.chain_name_2) \
+        .in_(pdb_test))
+
+    result_std = [[unit.unit_id_2 for unit in units] for unit_id_1, units in
+              itertools.groupby(correspondence_std, lambda x: x.unit_id_1)]
+
+    corr_std = zip(*result_std)
+
     # Create list to store the centers np array
     units_center = []
     units_num_center = []
 
     # This section of the code deals with the database query to get the centers data
-    for units in newresult:
+    for units in corr_std:
 
         #ordering = case(
             #{id: index for index, id in enumerate(units)},
@@ -144,14 +166,14 @@ def correspondence():
             units_center.append(np.array([row.x, row.y, row.z]))
             units_num_center.append(row.unit_id)
 
-    units_center_list = [units_center[i:i + query_len] for i in xrange(0, len(units_center), query_len)]
+    units_center_list = [units_center[i:i + query_std_len] for i in xrange(0, len(units_center), query_std_len)]
 
     # Create list to store the rotation np array
     units_rotation = []
     units_num_rotation = []
 
     # This section of the code deals with the database query to get the rotation data
-    for units in newresult:
+    for units in corr_std:
 
         #ordering = case(
             #{id: index for index, id in enumerate(units)},
@@ -166,9 +188,9 @@ def correspondence():
                                             [row.cell_2_0, row.cell_2_1, row.cell_2_2]]))
             units_num_rotation.append(row.unit_id)
 
-    units_rotation_list = [units_rotation[i:i + query_len] for i in xrange(0, len(units_rotation), query_len)]
+    units_rotation_list = [units_rotation[i:i + query_std_len] for i in xrange(0, len(units_rotation), query_std_len)]
 
-    rotation_size = len(units_rotation_list)
+    #rotation_size = len(units_rotation_list)
 
     # This section of the code deals with calculating the discrepancy for the corresponding instances
     distances = coll.defaultdict(lambda: coll.defaultdict(int))
@@ -228,7 +250,6 @@ def correspondence():
 
     return render_template("correspondence_display.html", query_pdb=query_pdb, query_nts=query_nts,
                           coord=coord_ordered, ifes=ifes_ordered, res_list=coord_ordered, data=heatmap_data)
-    #return render_template("correspondence_display.html", query_pdb=query_pdb, query_nts=query_nts, data=ife_coord.items())
 
 if __name__ == '__main__':
     app.run(debug=True)
