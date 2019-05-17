@@ -8,6 +8,7 @@ import itertools
 import random
 import time
 from numpy import nan
+#import scipy
 
 np.set_printoptions(threshold=np.nan)
 #from sqlalchemy.sql.expression import case
@@ -27,6 +28,7 @@ from models import *
 from discrepancy import *
 from greedyInsertion import *
 from process_input import *
+#from ordering import *
 from queries import *
 
 
@@ -69,9 +71,22 @@ def correspondence():
         for row in units_query:
             units_complete_list.append(row.unit_id)
 
-    ife_list = NrClasses.query.join(NrReleases, NrClasses, NrChains)\
-               .filter(NrChains.ife_id == '5J7L|1|11').filter(NrClasses.resolution == '4.0')\
-               .order_by(NrReleases.date.desc()).limit(1) 
+    ife_class = get_class_id(query_ife)
+
+    members_query = NrChains.query.filter_by(nr_class_id=ife_class)
+
+    ife_members = []
+    for row in members_query:
+        ife_members.append(row.ife_id)
+
+    members_pdb = []
+    members_chain = []
+
+    for ife in ife_members:
+        members_pdb.append(ife.split('|')[0])
+        members_chain.append(ife.split('|')[-1])
+
+    members_info = zip(members_pdb, members_chain)
 
     # query nts as a string
     query_nts = ', '.join(units_complete_list)
@@ -95,7 +110,7 @@ def correspondence():
 
     correspondence_complete = UnitCorrespondence.query.filter(UnitCorrespondence.unit_id_1.in_(units_complete_list)) \
         .filter(tuple_(UnitCorrespondence.pdb_id_2, UnitCorrespondence.chain_name_2) \
-        .in_(pdb_test)) 
+        .in_(pdb_test2)) 
 
     result_complete = [[unit.unit_id_2 for unit in units] for unit_id_1, units in
               itertools.groupby(correspondence_complete, lambda x: x.unit_id_1)]
@@ -140,7 +155,7 @@ def correspondence():
 
     correspondence_std = UnitCorrespondence.query.filter(UnitCorrespondence.unit_id_1.in_(units_std_list)) \
         .filter(tuple_(UnitCorrespondence.pdb_id_2, UnitCorrespondence.chain_name_2) \
-        .in_(pdb_test))
+        .in_(pdb_test2))
 
     result_std = [[unit.unit_id_2 for unit in units] for unit_id_1, units in
               itertools.groupby(correspondence_std, lambda x: x.unit_id_1)]
@@ -207,7 +222,7 @@ def correspondence():
     for index1, member1 in enumerate(ife_list):
         curr = distances.get(member1, {})
         for index2, member2 in enumerate(ife_list):
-            dist[index1, index2] = curr.get(member2, 0)
+            dist[index1, index2] = curr.get(member2, 0)       
 
     dist = (dist + np.swapaxes(dist, 0, 1))
 
@@ -215,6 +230,10 @@ def correspondence():
 
     # Order the list of ifes based on the new ordering
     ifes_ordered = [x for x in sorted(zip(ordering, ife_list))]
+
+    return json.dumps(ife_list + ordering + ifes_ordered)
+
+'''
 
     coord_ordered = []
     # append the coordinates based on new ordering
@@ -250,6 +269,7 @@ def correspondence():
 
     return render_template("correspondence_display.html", query_pdb=query_pdb, query_nts=query_nts,
                           coord=coord_ordered, ifes=ifes_ordered, res_list=coord_ordered, data=heatmap_data)
+'''
 
 if __name__ == '__main__':
     app.run(debug=True)
