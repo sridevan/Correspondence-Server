@@ -7,6 +7,7 @@ import numpy as np
 import itertools
 import random
 import time
+import math
 from numpy import nan
 #import scipy
 
@@ -14,13 +15,13 @@ np.set_printoptions(threshold=np.nan)
 #from sqlalchemy.sql.expression import case
 from sqlalchemy import case
 #from sqlalchemy.orm import relationship
-
 # from models import UnitCorrespondence
 # from flask_marshmallow import Marshmallow
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://webfr3d:nrw0FhuKwY2CUYa2TDPU@localhost/rna3dhub-prod'
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://webfr3d:nrw0FhuKwY2CUYa2TDPU@localhost/rna3dhub-prod'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@127.0.0.1/rna3dhub?unix_socket=/Applications/MAMP/tmp/mysql/mysql.sock'
 Bootstrap(app)
 db = SQLAlchemy(app)
 
@@ -28,7 +29,7 @@ from models import *
 from discrepancy import *
 from greedyInsertion import *
 from process_input import *
-#from ordering import *
+from ordering import *
 from queries import *
 
 
@@ -37,19 +38,12 @@ def home():
     # Debug statement
     return render_template("home.html")
 
-
 @app.route('/correspondence')
 def correspondence():
     # chain_info = '|'.join(unitid.split('|')[:3])
     # print chain_info
 
-    pdb_complete = [('5J7L', 'AA'), ('4YBB', 'AA'), ('5J8A', 'AA'), ('5JC9', 'AA'), ('4WOI', 'DA'), ('4WOI', 'AA'), ('5IT8', 'AA'), ('4V9P', 'FA'), ('4V9O', 'BA'), ('5J7L', 'BA'), ('4V9P', 'HA'), ('4V9P', 'DA'), ('4V9P', 'BA'), ('5J8A', 'BA'), ('4V9O', 'FA'), ('5J91', 'AA'), ('4V6C', 'AA'), ('5JC9', 'BA'), ('4V52', 'CA'), ('4V9O', 'DA'), ('4V7T', 'AA'), ('4V57', 'CA'), ('4WWW', 'QA'), ('4V52', 'AA'), ('4V57', 'AA'), ('4U27', 'AA'), ('5J88', 'AA'), ('4V7V', 'AA'), ('4V54', 'CA'), ('4WF1', 'AA'), ('4YBB', 'BA'), ('4U1U', 'AA'), ('4V64', 'CA'), ('4U26', 'AA'), ('4V53', 'CA'), ('4V9D', 'AA'), ('4U24', 'AA'), ('4V7S', 'AA'), ('4U25', 'AA'), ('5IT8', 'BA'), ('4V56', 'CA'), ('4V9D', 'BA'), ('4V54', 'AA'), ('4U27', 'CA'), ('4V64', 'AA'), ('4V53', 'AA'), ('4V56', 'AA'), ('4V7U', 'AA'), ('4V55', 'CA'), ('4V50', 'CA'), ('4V9O', 'HA'), ('4WWW', 'XA'), ('4V4Q', 'CA'), ('4U20', 'AA'), ('4V55', 'AA'), ('4U1U', 'CA'), ('4V50', 'AA'), ('4U1V', 'AA'), ('4U25', 'CA'), ('4V6C', 'CA'), ('5J88', 'BA'), ('4V4Q', 'AA'), ('4U26', 'CA'), ('4V85', 'AA'), ('5J91', 'BA'), ('4V7T', 'CA'), ('4WF1', 'CA'), ('4U24', 'CA'), ('4U1V', 'CA'), ('4V6D', 'AA'), ('4U20', 'CA'), ('4V89', 'AA'), ('4V7S', 'CA'), ('4V6D', 'CA'), ('4V7V', 'CA'), ('4V6E', 'AA'), ('4V9C', 'CA'), ('4V9C', 'AA'), ('4V7U', 'CA'), ('4V6E', 'CA'), ('4V5B', 'BA'), ('4V5B', 'DA'), ('5J5B', 'AA'), ('4V4H', 'CA'), ('4V4H', 'AA'), ('5J5B', 'BA'), ('5AFI', 'a'), ('5NWY', '0'), ('3R8O', 'A'), ('3R8N', 'A'), ('5H5U', 'h'), ('5WDT', 'a'), ('5WFS', 'a'), ('5MDV', '2'), ('5MGP', 'a'), ('6ENU', 'a'), ('5WE4', 'a'), ('6ENF', 'a'), ('5U9G', 'A'), ('5U9F', 'A'), ('3JCE', 'a'), ('5UYM', 'A'), ('5MDW', '2'), ('5MDZ', '2'), ('6C4I', 'a'), ('4V80', 'AA'), ('4V80', 'CA'), ('5O2R', 'a'), ('5WFK', 'a'), ('5LZD', 'a'), ('5WE6', 'a'), ('6BU8', 'A'), ('5MDY', '2'), ('5U4I', 'a'), ('5UYL', 'A'), ('5KCR', '1a'), ('5IQR', '2'), ('3JBV', 'A'), ('5WF0', 'a'), ('5LZA', 'a'), ('5JTE', 'AA'), ('5JU8', 'AA'), ('3JCJ', 'g'), ('6ENJ', 'a'), ('3J9Z', 'SA'), ('3JCD', 'a'), ('5L3P', 'a'), ('6DNC', 'A'), ('5UYQ', 'A'), ('5UYP', 'A'), ('5UYK', 'A'), ('5KPW', '26'), ('3J9Y', 'a'), ('5KCS', '1a'), ('5KPS', '27'), ('5UYN', 'A'), ('5KPX', '26'), ('3JBU', 'A'), ('5NP6', 'D'), ('3JA1', 'SA'), ('5U4J', 'a')]
-
-    pdb_truncated = random.sample(pdb_complete, 50)
-
-    pdb_test = [('3JCD', 'a'), ('3R8N', 'A'), ('3JCJ', 'g'), ('5NP6', 'D'), ('6H4N', 'a'), ('6DNC', 'A'), ('5H5U', 'h'), ('5MDV', '2'), ('6ENJ', 'a'), ('3JBU', 'A'), ('5JTE', 'AA'), ('5NWY', '0'), ('5LZD', 'a'), ('5IQR', '2'), ('5KPW', '26'), ('4V85', 'AA')]
-
-    pdb_test2 = [('3JCD', 'a'), ('3R8N', 'A'), ('3JCJ', 'g'), ('5NP6', 'D'), ('6H4N', 'a')]
+    pdb_test = [('3JCD', 'a'), ('3R8N', 'A'), ('3JCJ', 'g'), ('5NP6', 'D'), ('6H4N', 'a')]
 
     data = request.args['units']
 
@@ -59,6 +53,49 @@ def correspondence():
     query_pdb = query_list[0][0].split('|')[0]
     query_chain = query_list[0][0].split('|')[2]
 
+    reject_list = []
+
+#######################################################################################################
+    
+    #This section of the code deals with getting the members of Equivalence Class from the query chain
+    ife_list = NrChains.query.join(NrClasses, NrReleases)\
+        .filter(NrChains.ife_id == query_ife).filter(NrClasses.resolution == '4.0')\
+        .order_by(NrReleases.date.desc()).limit(1) 
+       
+    for row in ife_list:
+        class_id = row.nr_class_id
+
+    ec_query = NrClasses.query.filter_by(nr_class_id=class_id)
+
+    for row in ec_query:
+        equivalence_class = row.name
+        nr_release = row.nr_release_id
+
+    members_query = NrChains.query.filter_by(nr_class_id=class_id)
+
+    ife_members = []
+    for row in members_query:
+        ife_members.append(row.ife_id)
+
+    rejected_ife = []
+
+    for i, v in enumerate(ife_members):
+        if any(c in '+' for c in v):
+            rejected_ife.append(ife_members[i])
+            del ife_members[i]
+        else:
+            pass
+
+    members_pdb = []
+    members_chain = []
+
+    for ife in ife_members:
+        members_pdb.append(ife.split('|')[0])
+        members_chain.append(ife.split('|')[-1])
+
+    members_info = zip(members_pdb, members_chain)
+
+#####################################################################################################
     units_complete_list = []
 
     for range_num in query_list:
@@ -71,27 +108,12 @@ def correspondence():
         for row in units_query:
             units_complete_list.append(row.unit_id)
 
-    ife_class = get_class_id(query_ife)
-
-    members_query = NrChains.query.filter_by(nr_class_id=ife_class)
-
-    ife_members = []
-    for row in members_query:
-        ife_members.append(row.ife_id)
-
-    members_pdb = []
-    members_chain = []
-
-    for ife in ife_members:
-        members_pdb.append(ife.split('|')[0])
-        members_chain.append(ife.split('|')[-1])
-
-    members_info = zip(members_pdb, members_chain)
-
     # query nts as a string
     query_nts = ', '.join(units_complete_list)
 
     query_complete_len = len(units_complete_list)
+
+#####################################################################################################
 
     #### This section deals with getting the units of unmodified nucleotides
 
@@ -106,11 +128,13 @@ def correspondence():
 
     query_std_len= len(units_std_list)
 
-    #### This section of the code deals with getting the corresponding unit_ids from the query
+#####################################################################################################
+
+#### This section of the code deals with getting the complete corresponding unit_ids 
 
     correspondence_complete = UnitCorrespondence.query.filter(UnitCorrespondence.unit_id_1.in_(units_complete_list)) \
         .filter(tuple_(UnitCorrespondence.pdb_id_2, UnitCorrespondence.chain_name_2) \
-        .in_(pdb_test2)) 
+        .in_(members_info[:100])) 
 
     result_complete = [[unit.unit_id_2 for unit in units] for unit_id_1, units in
               itertools.groupby(correspondence_complete, lambda x: x.unit_id_1)]
@@ -123,16 +147,15 @@ def correspondence():
     res_type = []
     for units in corr_complete:
         unit_list.append(units[0])
-        for unit in units:
-            res_num.append(unit.split('|')[-1])
-            res_type.append(unit.split('|')[-2])
+        #for unit in units:
+            #res_num.append(unit.split('|')[-1])
+            #res_type.append(unit.split('|')[-2])
         # ife = '|'.join(units[0].split('|')[:3])
         # unit_list.append(ife)
 
     # res_num_list = [res_num[i:i + query_len] for i in range(0, len(res_num), query_len)]
     # res_type_list = [res_type[i:i + query_len] for i in range(0, len(res_type), query_len)]
-
-    res_list = [res_num[i:i + query_complete_len] for i in xrange(0, len(res_num), query_complete_len)]
+    # res_list = [res_num[i:i + query_complete_len] for i in xrange(0, len(res_num), query_complete_len)]
 
     # Create list of IFES
     ife_list = []
@@ -151,16 +174,22 @@ def correspondence():
 
 ##################################################################################
 
+#### This section of the code deals with getting the corresponding unit_ids without modified nucleotides 
+
     #ordering = case({id: index for index, id in enumerate(units_std)}, value=UnitCorrespondence.unit_id_1)
 
     correspondence_std = UnitCorrespondence.query.filter(UnitCorrespondence.unit_id_1.in_(units_std_list)) \
         .filter(tuple_(UnitCorrespondence.pdb_id_2, UnitCorrespondence.chain_name_2) \
-        .in_(pdb_test2))
+        .in_(members_info[:100]))
 
     result_std = [[unit.unit_id_2 for unit in units] for unit_id_1, units in
               itertools.groupby(correspondence_std, lambda x: x.unit_id_1)]
 
     corr_std = zip(*result_std)
+
+##################################################################################
+
+#### Queries to obtain center and rotation data for calculating discrepacy
 
     # Create list to store the centers np array
     units_center = []
@@ -205,7 +234,12 @@ def correspondence():
 
     units_rotation_list = [units_rotation[i:i + query_std_len] for i in xrange(0, len(units_rotation), query_std_len)]
 
-    #rotation_size = len(units_rotation_list)
+    rotation_size = len(units_rotation_list)
+
+####################################################################################
+
+#### Build a distance matrix using the queries from above and order them based on
+#### similarity
 
     # This section of the code deals with calculating the discrepancy for the corresponding instances
     distances = coll.defaultdict(lambda: coll.defaultdict(int))
@@ -214,9 +248,16 @@ def correspondence():
         for b in range(a+1, len(ife_list)):
             disc = matrix_discrepancy(units_center_list[a], units_rotation_list[a], units_center_list[b],
                                       units_rotation_list[b])
-            #ife_a = '|'.join(ife_list[a].split('|')[:3])
-            #ife_b = '|'.join(ife_list[b].split('|')[:3])
             distances[ife_list[a]][ife_list[b]] = disc
+
+    # Empty list to append pairs of IFE with NaN discrepancy
+    ife_nan = []
+
+    for k, v in distances.items():
+        for a, b in v.items():
+            if math.isnan(b):
+                ife_nan.append((k, a))
+                v[a] = 1
 
     dist = np.zeros((len(ife_list), len(ife_list)))
     for index1, member1 in enumerate(ife_list):
@@ -226,14 +267,20 @@ def correspondence():
 
     dist = (dist + np.swapaxes(dist, 0, 1))
 
-    ordering, _, _ = orderWithPathLengthFromDistanceMatrix(dist, 10, scanForNan=True)
+    #ordering, _, _ = orderWithPathLengthFromDistanceMatrix(dist, 10, scanForNan=True)
+    disc_order = optimalLeafOrder(dist)
+
+    new_order = []
+    idx_new = []
+
+    for idx, order in enumerate(disc_order):
+        new_order.append(ife_list[order])
+        idx_new.append(idx)
+
+    ifes_ordered = zip(idx_new, new_order)
 
     # Order the list of ifes based on the new ordering
-    ifes_ordered = [x for x in sorted(zip(ordering, ife_list))]
-
-    return json.dumps(ife_list + ordering + ifes_ordered)
-
-'''
+    #ifes_ordered = [x for x in sorted(zip(disc_order, ife_list))]
 
     coord_ordered = []
     # append the coordinates based on new ordering
@@ -241,6 +288,10 @@ def correspondence():
         for key, val in ife_coord.iteritems():
             if index[1] == key:
                 coord_ordered.append(val)
+
+#########################################################################################
+
+#### Logic to order and build the heatmap data
 
     # function to get the discrepancy based on the new ordering
     def get(d, first, second):
@@ -266,10 +317,12 @@ def correspondence():
         {"ife1": ife1, "ife1_index": ife1_index, "ife2": ife2, "ife2_index": ife2_index, "discrepancy": discrepancy}
         for ife1, ife1_index, ife2, ife2_index, discrepancy in zip(ife1, index1, ife2, index2, disc_ordered)
     ]
+    
+###########################################################################################     
 
     return render_template("correspondence_display.html", query_pdb=query_pdb, query_nts=query_nts,
-                          coord=coord_ordered, ifes=ifes_ordered, res_list=coord_ordered, data=heatmap_data)
-'''
+                          coord=coord_ordered, ifes=ifes_ordered, res_list=coord_ordered, 
+                          ec=equivalence_class, release=nr_release, data=heatmap_data)
 
 if __name__ == '__main__':
     app.run(debug=True)
