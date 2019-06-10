@@ -12,6 +12,7 @@
   <script src="http://rnatest.bgsu.edu/rna3dhub/js/jquery.jmolTools.js"></script>-->
   <script src="/static/js/jsmol/JSmol.min.nojq.js"></script>
   <script src="/static/js/jquery.jmolTools.js"></script>
+  <script src="//d3js.org/d3.v4.min.js"></script>
   <style>
     /* Remove the navbar's default margin-bottom and rounded borders */ 
     .navbar {
@@ -66,8 +67,8 @@
           }
 
           var Info = {
-              width: 400,
-              height: 400,
+              width: 500,
+              height: 500,
               debug: false,
               color: "white",
               addSelectionOptions: false,
@@ -157,7 +158,7 @@
                   <th scope="col">Instances</th>
                   <th scope="col">RNA Chains</th>
                 </tr>
-              </thead>>
+              </thead>
               <tbody>
               {% for x in range(0, coord|length) %}
                 <tr>
@@ -165,7 +166,7 @@
                   <td>{{ ifes[x][1] }}</td>
                 </tr>
               {% endfor %}
-              </tbody>>
+              </tbody>
           </table>
         </div>
     </div>
@@ -216,14 +217,13 @@
     <div class="col-sm-4">
 
       <div id ='chart'>
-
-            <script src="//d3js.org/d3.v4.min.js"></script>
             <script type="text/javascript">
                 var data = {{ data | tojson | safe }};
             </script>
-            <script type="text/javascript" src="http://rnatest.bgsu.edu/corr-server/static/js/heatmap.js"></script>
-              
+            <!--<script type="text/javascript" src="http://rnatest.bgsu.edu/corr-server/static/js/heatmap.js"></script>-->
       </div>
+      <button id="submit">get Id</button>
+      <div id="result"></div>
         
     </div>
   </div>
@@ -234,6 +234,7 @@
   <p>BGSU RNA Group</p>
 </footer>
 
-
 </body>
+
+<script src="/static/js/heatmap.js"></script>
 </html>
