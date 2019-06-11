@@ -156,7 +156,6 @@
             return ((i >= 0)
             ? "dayLabel mono axis axis-workweek" : "dayLabel mono axis");
           });
-
       // Draw the x-axis label
       // Need to draw this vertically (the data elements can be large!)
       var timeLabels = svg.selectAll(".timeLabel")
@@ -175,7 +174,6 @@
         .attr("class", function(d, i) {
           return ((i >= 0) ? "timeLabel mono axis axis-worktime" : "timeLabel mono axis");
         });
-
         */
 
       // Create the paired elements
@@ -196,11 +194,41 @@
               return colorScale(d.discrepancy);
           }
         })
+        .on("click", function(d) {
+          
+          row = d.ife1_index;
+          column = d.ife2_index
+
+          // above diagonal
+          if (row < column) {
+              for (i = 1; i < ife_nr_size; i++) {
+               $.jmolTools.models[i].hideAll();
+              }
+
+              for (i = row; i <= column; i++) {
+               $('#' + i).jmolShow();
+              }
+          
+          // diagonal
+          } else if (row == column) {
+              for (i = 1; i < ife_nr_size; i++) {
+               $.jmolTools.models[i].hideAll();
+              }
+
+              $('#' + row).jmolShow();
+          
+          // below diagonal
+          } else if (row > column) {
+              for (i = 1; i < ife_nr_size; i++) {
+               $.jmolTools.models[i].hideAll();
+              }
+
+              $('#' + row).jmolShow();
+              $('#' + column).jmolShow();
+          }
+        })
         .append("title")
-
-        /*
         .text(function(d) {
-
           if ((d.ife1 == d.ife2) && (d.discrepancy == null)) {
             d.discrepancy = 0;
             return d.ife1 + ':' + d.ife2 + ' = ' + d.discrepancy;
@@ -209,10 +237,8 @@
           } else {
               return d.ife1 + ':' + d.ife2 + ' = ' + d.discrepancy;
           }
-
-
         });
-        */
+        
     
       heatMap.exit().remove();
 
@@ -289,7 +315,7 @@
         .attr("transform", "translate(" + 0 + "," + (height + 17) + ")")
         .call(legendAxis);
 
-      /*
+      /*  
       var inputs = d3.selectAll('input[type="checkbox"]')._groups[0];
         document.getElementById('submit').addEventListener('click', function() {
             var checked = [];
@@ -303,21 +329,3 @@
             
         });
         */
-
-      var inputs = d3.selectAll('input[type="checkbox"]')._groups[0];
-        document.getElementById('submit').addEventListener('click', function() {
-            var checked = [];
-            for (i = 0; i < inputs.length; i++) {
-                if (inputs[i].checked) {
-                    checked.push(inputs[i].id);
-                }
-            }
-            document.getElementById('result').innerHTML = 'Array of ids selected ' + checked;
-            console.log(checked);
-            
-        });
-
-     
-    
-      
-
