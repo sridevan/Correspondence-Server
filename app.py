@@ -1,4 +1,5 @@
 import collections as coll
+from collections import OrderedDict
 from flask import Flask, json, jsonify, render_template, render_template_string, request, session
 from sqlalchemy import tuple_
 from flask_bootstrap import Bootstrap
@@ -30,7 +31,7 @@ from discrepancy import *
 from greedyInsertion import *
 from process_input import *
 from ordering import *
-from queries import *
+#from queries import *
 
 
 @app.route('/')
@@ -43,8 +44,8 @@ def correspondence():
     # chain_info = '|'.join(unitid.split('|')[:3])
     # print chain_info
 
-    pdb_test = [('3JCD', 'a'), ('3R8N', 'A'), ('3JCJ', 'g'), ('5NP6', 'D'), ('6H4N', 'a')]
-
+    th_test = [('4V5F', 'AA'), ('4V5F', 'CA'), ('4V67', 'AA'), ('4V67', 'CA'), ('4V8O', 'AA'), ('4V90', 'AA'), ('4V9H', 'AA'), ('4V9K', 'AA'), ('4V9K', 'CA'), ('4V9L', 'AA'), ('4V9L', 'CA'), ('4W29', 'AA'), ('4W29', 'CA')]
+    trna_test = [('5AFI', 'y'), ('4V5G', 'CW'), ('5WF0', 'y'), ('5WE4', 'y')]
     data = request.args['units']
 
     query_list = input_type(data)
@@ -53,7 +54,24 @@ def correspondence():
     query_pdb = query_list[0][0].split('|')[0]
     query_chain = query_list[0][0].split('|')[2]
 
-    reject_list = []
+    reject_list = ['5LZA|1|a']
+
+#######################################################################################################
+
+    def get_chain_idx(query):
+
+        range_selection = []
+        for elem in query:
+            range_selection.append(elem)
+
+        chain_idx = []
+        for elem in range_selection:
+            units_query = UnitInfo.query.filter_by(pdb_id=query_pdb, chain=query_chain).filter(UnitInfo.unit_id.in_(elem))
+
+            for rows in units_query:
+                chain_idx.append(rows.chain_index)
+
+        return chain_idx
 
 #######################################################################################################
     
@@ -83,6 +101,9 @@ def correspondence():
         if any(c in '+' for c in v):
             rejected_ife.append(ife_members[i])
             del ife_members[i]
+        for elem in reject_list:
+        		if elem == v:
+        			del ife_members[i]
         else:
             pass
 
@@ -96,22 +117,69 @@ def correspondence():
     members_info = zip(members_pdb, members_chain)
 
 #####################################################################################################
+
     units_complete_list = []
 
-    for range_num in query_list:
-        start_range = range_num[0].split('|')[-1]
-        stop_range = range_num[1].split('|')[-1]
-        units_query = UnitInfo.query.filter_by(pdb_id=query_pdb, chain=query_chain). \
-            filter(UnitInfo.chain_index.between(start_range, stop_range)) \
-            .order_by(UnitInfo.chain_index).all()
+    if len(query_list) == 1:
+        
+        # Check for single unit-id
+        if query_list[0][0] == query_list[0][1]:
+            
+            chain_idx = get_chain_idx(query_list)
 
-        for row in units_query:
-            units_complete_list.append(row.unit_id)
+            units_query = UnitInfo.query.filter_by(pdb_id=query_pdb, chain=query_chain). \
+                           filter(UnitInfo.chain_index.between(chain_idx[0], chain_idx[1])) \
+                           .order_by(UnitInfo.chain_index).all()
 
+            for row in units_query:
+                units_complete_list.append(row.unit_id)
+
+        # This would be a single range (such as HL)
+        else:
+            
+            chain_idx = get_chain_idx(query_list)
+
+            chain_idx.sort()
+            
+            units_query = UnitInfo.query.filter_by(pdb_id=query_pdb, chain=query_chain). \
+                           filter(UnitInfo.chain_index.between(chain_idx[0], chain_idx[1])) \
+                           .order_by(UnitInfo.chain_index).all()
+
+            for row in units_query:
+                units_complete_list.append(row.unit_id)
+
+    else:
+        
+        for selection in query_list:
+            # Check for IL
+            if selection[0][0] != selection[0][1]:
+                
+                chain_idx = get_chain_idx(query_list)
+
+                chain_idx.sort()
+
+                # Partition the list into a list of lists containing the start and end units of each range
+                chain_idx = [chain_idx[i:i + len(query_list)] for i in range(0, len(chain_idx), len(query_list))]
+
+                for i in chain_idx:
+                    units_query = UnitInfo.query.filter_by(pdb_id=query_pdb, chain=query_chain). \
+                           filter(UnitInfo.chain_index.between(i[0], i[1])) \
+                           .order_by(UnitInfo.chain_index).all()
+
+                    for row in units_query:
+                        units_complete_list.append(row.unit_id)
+
+                units_complete_list = list(OrderedDict.fromkeys(units_complete_list))
+    
+                
+#####################################################################################################
+
+    
     # query nts as a string
     query_nts = ', '.join(units_complete_list)
 
     query_complete_len = len(units_complete_list)
+
 
 #####################################################################################################
 
@@ -134,7 +202,7 @@ def correspondence():
 
     correspondence_complete = UnitCorrespondence.query.filter(UnitCorrespondence.unit_id_1.in_(units_complete_list)) \
         .filter(tuple_(UnitCorrespondence.pdb_id_2, UnitCorrespondence.chain_name_2) \
-        .in_(members_info[:100])) 
+        .in_(members_info[:50])) 
 
     result_complete = [[unit.unit_id_2 for unit in units] for unit_id_1, units in
               itertools.groupby(correspondence_complete, lambda x: x.unit_id_1)]
@@ -180,7 +248,7 @@ def correspondence():
 
     correspondence_std = UnitCorrespondence.query.filter(UnitCorrespondence.unit_id_1.in_(units_std_list)) \
         .filter(tuple_(UnitCorrespondence.pdb_id_2, UnitCorrespondence.chain_name_2) \
-        .in_(members_info[:100]))
+        .in_(members_info[:50]))
 
     result_std = [[unit.unit_id_2 for unit in units] for unit_id_1, units in
               itertools.groupby(correspondence_std, lambda x: x.unit_id_1)]
@@ -270,17 +338,14 @@ def correspondence():
     #ordering, _, _ = orderWithPathLengthFromDistanceMatrix(dist, 10, scanForNan=True)
     disc_order = optimalLeafOrder(dist)
 
-    new_order = []
-    idx_new = []
+    new_ordering = []
+    idx_ordering = []
 
     for idx, order in enumerate(disc_order):
-        new_order.append(ife_list[order])
-        idx_new.append(idx)
+        new_ordering.append(ife_list[order])
+        idx_ordering.append(idx)
 
-    ifes_ordered = zip(idx_new, new_order)
-
-    # Order the list of ifes based on the new ordering
-    #ifes_ordered = [x for x in sorted(zip(disc_order, ife_list))]
+    ifes_ordered = zip(idx_ordering, new_ordering)
 
     coord_ordered = []
     # append the coordinates based on new ordering
@@ -323,6 +388,6 @@ def correspondence():
     return render_template("correspondence_display.html", query_pdb=query_pdb, query_nts=query_nts,
                           coord=coord_ordered, ifes=ifes_ordered, res_list=coord_ordered, 
                           ec=equivalence_class, release=nr_release, data=heatmap_data)
-
+    
 if __name__ == '__main__':
     app.run(debug=True)
