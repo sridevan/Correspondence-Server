@@ -35,3 +35,18 @@ def input_type(data):
             raise BadRequest("Range should must have 1 or 2 endpoints")
 
     return processed
+
+def check_query(query):
+    
+    if len(query) == 1:
+        if query[0][0] == query[0][1]:
+            query_type = 'loop_id'
+        else:
+            query_type = 'single_range'
+    else:
+        if query[0][0] != query[0][1]:
+            query_type = 'multiple_ranges'
+        else:
+            query_type = 'units_str'
+    
+    return query_type
