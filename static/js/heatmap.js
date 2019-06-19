@@ -199,7 +199,7 @@
           row = d.ife1_index;
           column = d.ife2_index
 
-          // above diagonal
+          // superimpose instances above diagonal
           if (row < column) {
               for (i = 1; i < ife_nr_size; i++) {
                $.jmolTools.models[i].hideAll();
@@ -209,7 +209,7 @@
                $('#' + i).jmolShow();
               }
           
-          // diagonal
+          // display diagonal instance
           } else if (row == column) {
               for (i = 1; i < ife_nr_size; i++) {
                $.jmolTools.models[i].hideAll();
@@ -217,7 +217,7 @@
 
               $('#' + row).jmolShow();
           
-          // below diagonal
+          // sumperimpose instances below diagonal
           } else if (row > column) {
               for (i = 1; i < ife_nr_size; i++) {
                $.jmolTools.models[i].hideAll();
@@ -229,13 +229,14 @@
         })
         .append("title")
         .text(function(d) {
+          var formatDecimal = d3.format(",.4f")
           if ((d.ife1 == d.ife2) && (d.discrepancy == null)) {
             d.discrepancy = 0;
-            return d.ife1 + ':' + d.ife2 + ' = ' + d.discrepancy;
+            return d.ife1 + ':' + d.ife2 + ' = ' + formatDecimal(d.discrepancy);
           } else if ((d.ife1 != d.ife2) && (d.discrepancy == null)) {
               return 'No discrepancy value is computed between ' + d.ife1 + ' and ' + d.ife2;
           } else {
-              return d.ife1 + ':' + d.ife2 + ' = ' + d.discrepancy;
+              return d.ife1 + ':' + d.ife2 + ' = ' + formatDecimal(d.discrepancy);
           }
         });
         
