@@ -31,7 +31,7 @@ from discrepancy import *
 from greedyInsertion import *
 from process_input import *
 from ordering import *
-#from queries import *
+from queries import *
 
 
 @app.route('/')
@@ -41,6 +41,7 @@ def home():
 
 @app.route('/correspondence')
 def correspondence():
+    
     # chain_info = '|'.join(unitid.split('|')[:3])
     # print chain_info
 
@@ -49,10 +50,6 @@ def correspondence():
     data = request.args['units']
 
     query_list = input_type(data)
-
-    query_ife = '|'.join(query_list[0][0].split('|')[:3])
-    query_pdb = query_list[0][0].split('|')[0]
-    query_chain = query_list[0][0].split('|')[2]
 
     reject_list = ['5LZA|1|a']
 
@@ -73,8 +70,79 @@ def correspondence():
 
         return chain_idx
 
+
+    query_type = check_query(query_list)
+
+    if query_type != 'loop_id':
+        query_ife = '|'.join(query_list[0][0].split('|')[:3])
+        query_pdb = query_list[0][0].split('|')[0]
+        query_chain = query_list[0][0].split('|')[2]
+    else:
+        pass
 #######################################################################################################
-    
+
+    def get_sorted_units(units):
+
+        unsorted_units = units.split(',')
+
+        sorted_units = sorted(unsorted_units, key=lambda x: int(x.split('|')[4]))
+
+        return sorted_units
+
+########################################################################################################
+
+    units_complete_list = []
+
+    if query_type == 'single_range':
+
+        chain_idx = get_chain_idx(query_list)
+        chain_idx.sort()
+            
+        units_query = UnitInfo.query.filter_by(pdb_id=query_pdb, chain=query_chain). \
+                        filter(UnitInfo.chain_index.between(chain_idx[0], chain_idx[1])) \
+                        .order_by(UnitInfo.chain_index).all()
+
+        for row in units_query:
+            units_complete_list.append(row.unit_id)
+
+    elif query_type == 'multiple_ranges':
+        
+        chain_idx = get_chain_idx(query_list)
+        chain_idx.sort()
+
+        # Partition the list into a list of lists containing the start and end units of each range
+        chain_idx = [chain_idx[i:i + 2] for i in range(0, len(chain_idx), 2)]
+
+        for i in chain_idx:
+            units_query = UnitInfo.query.filter_by(pdb_id=query_pdb, chain=query_chain). \
+                   filter(UnitInfo.chain_index.between(i[0], i[1])) \
+                   .order_by(UnitInfo.chain_index).all()
+            for row in units_query:
+                units_complete_list.append(row.unit_id)
+
+        units_complete_list = list(OrderedDict.fromkeys(units_complete_list))
+
+    elif query_type == 'units_str':
+        
+        for unit in query_list:
+            units_complete_list.append(unit[0])
+
+    # work to do
+    elif query_type == 'loop_id':
+        
+        loop_id = query_list[0][0]
+
+        units_query = LoopInfo.query.filter_by(loop_id=loop_id)
+
+        for row in units_query:
+            unsorted_units = row.unit_ids
+
+        units_complete_list = get_sorted_units(unsorted_units)
+        query_ife = '|'.join(units_complete_list[0].split('|')[:3])
+        query_pdb = units_complete_list[0].split('|')[0]
+
+    ##########################################################################################################
+
     #This section of the code deals with getting the members of Equivalence Class from the query chain
     ife_list = NrChains.query.join(NrClasses, NrReleases)\
         .filter(NrChains.ife_id == query_ife).filter(NrClasses.resolution == '4.0')\
@@ -102,8 +170,8 @@ def correspondence():
             rejected_ife.append(ife_members[i])
             del ife_members[i]
         for elem in reject_list:
-        		if elem == v:
-        			del ife_members[i]
+                if elem == v:
+                    del ife_members[i]
         else:
             pass
 
@@ -117,69 +185,11 @@ def correspondence():
     members_info = zip(members_pdb, members_chain)
 
 #####################################################################################################
-
-    units_complete_list = []
-
-    if len(query_list) == 1:
-        
-        # Check for single unit-id
-        if query_list[0][0] == query_list[0][1]:
-            
-            chain_idx = get_chain_idx(query_list)
-
-            units_query = UnitInfo.query.filter_by(pdb_id=query_pdb, chain=query_chain). \
-                           filter(UnitInfo.chain_index.between(chain_idx[0], chain_idx[1])) \
-                           .order_by(UnitInfo.chain_index).all()
-
-            for row in units_query:
-                units_complete_list.append(row.unit_id)
-
-        # This would be a single range (such as HL)
-        else:
-            
-            chain_idx = get_chain_idx(query_list)
-
-            chain_idx.sort()
-            
-            units_query = UnitInfo.query.filter_by(pdb_id=query_pdb, chain=query_chain). \
-                           filter(UnitInfo.chain_index.between(chain_idx[0], chain_idx[1])) \
-                           .order_by(UnitInfo.chain_index).all()
-
-            for row in units_query:
-                units_complete_list.append(row.unit_id)
-
-    else:
-        
-        for selection in query_list:
-            # Check for IL
-            if selection[0][0] != selection[0][1]:
-                
-                chain_idx = get_chain_idx(query_list)
-
-                chain_idx.sort()
-
-                # Partition the list into a list of lists containing the start and end units of each range
-                chain_idx = [chain_idx[i:i + len(query_list)] for i in range(0, len(chain_idx), len(query_list))]
-
-                for i in chain_idx:
-                    units_query = UnitInfo.query.filter_by(pdb_id=query_pdb, chain=query_chain). \
-                           filter(UnitInfo.chain_index.between(i[0], i[1])) \
-                           .order_by(UnitInfo.chain_index).all()
-
-                    for row in units_query:
-                        units_complete_list.append(row.unit_id)
-
-                units_complete_list = list(OrderedDict.fromkeys(units_complete_list))
-    
-                
-#####################################################################################################
-
     
     # query nts as a string
     query_nts = ', '.join(units_complete_list)
 
     query_complete_len = len(units_complete_list)
-
 
 #####################################################################################################
 
@@ -202,7 +212,7 @@ def correspondence():
 
     correspondence_complete = UnitCorrespondence.query.filter(UnitCorrespondence.unit_id_1.in_(units_complete_list)) \
         .filter(tuple_(UnitCorrespondence.pdb_id_2, UnitCorrespondence.chain_name_2) \
-        .in_(members_info[:50])) 
+        .in_(members_info)) 
 
     result_complete = [[unit.unit_id_2 for unit in units] for unit_id_1, units in
               itertools.groupby(correspondence_complete, lambda x: x.unit_id_1)]
@@ -242,13 +252,13 @@ def correspondence():
 
 ##################################################################################
 
-#### This section of the code deals with getting the corresponding unit_ids without modified nucleotides 
+    #### Get the list of corresponding unit-ids without modified nucleotides 
 
     #ordering = case({id: index for index, id in enumerate(units_std)}, value=UnitCorrespondence.unit_id_1)
 
     correspondence_std = UnitCorrespondence.query.filter(UnitCorrespondence.unit_id_1.in_(units_std_list)) \
         .filter(tuple_(UnitCorrespondence.pdb_id_2, UnitCorrespondence.chain_name_2) \
-        .in_(members_info[:50]))
+        .in_(members_info))
 
     result_std = [[unit.unit_id_2 for unit in units] for unit_id_1, units in
               itertools.groupby(correspondence_std, lambda x: x.unit_id_1)]
@@ -257,7 +267,7 @@ def correspondence():
 
 ##################################################################################
 
-#### Queries to obtain center and rotation data for calculating discrepacy
+#### Get center and rotation data for calculating discrepancy
 
     # Create list to store the centers np array
     units_center = []
@@ -325,7 +335,7 @@ def correspondence():
         for a, b in v.items():
             if math.isnan(b):
                 ife_nan.append((k, a))
-                v[a] = 1
+                v[a] = -0.1
 
     dist = np.zeros((len(ife_list), len(ife_list)))
     for index1, member1 in enumerate(ife_list):
@@ -388,6 +398,6 @@ def correspondence():
     return render_template("correspondence_display.html", query_pdb=query_pdb, query_nts=query_nts,
                           coord=coord_ordered, ifes=ifes_ordered, res_list=coord_ordered, 
                           ec=equivalence_class, release=nr_release, data=heatmap_data)
-    
+
 if __name__ == '__main__':
     app.run(debug=True)
