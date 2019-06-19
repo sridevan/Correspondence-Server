@@ -56,6 +56,12 @@ class UnitRotations(db.Model):
     cell_2_1 = db.Column(db.Float)
     cell_2_2 = db.Column(db.Float)
 
+class LoopInfo(db.Model):
+    __tablename__ = "loop_info"
+
+    loop_id = db.Column(db.String, primary_key=True)
+    unit_ids = db.Column(db.Text)
+
 class NrReleases(db.Model):
     __tablename__ = "nr_releases"
 
