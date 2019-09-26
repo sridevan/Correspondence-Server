@@ -61,6 +61,7 @@ class LoopInfo(db.Model):
 
     loop_id = db.Column(db.String, primary_key=True)
     unit_ids = db.Column(db.Text)
+    loop_name = db.Column(db.Text)
 
 class NrReleases(db.Model):
     __tablename__ = "nr_releases"
@@ -85,6 +86,18 @@ class NrChains(db.Model):
     ife_id = db.Column(db.String)
     nr_class_id = db.Column(db.Integer, db.ForeignKey("nr_classes.nr_class_id"))
     nr_release_id = db.Column(db.String, db.ForeignKey("nr_releases.nr_release_id"))
+
+class UnitPairInteractions(db.Model):
+    __tablename__ = "unit_pairs_interactions"
+
+    unit_pairs_interactions_id = db.Column(db.Integer, primary_key=True)
+    unit_id_1 = db.Column(db.String)
+    unit_id_2 = db.Column(db.String)
+    pdb_id = db.Column(db.String)
+    f_lwbp = db.Column(db.String)
+    f_stacks = db.Column(db.String)
+    f_bphs = db.Column(db.String)
+    f_brbs = db.Column(db.String)
 
 
 
