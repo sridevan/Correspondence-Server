@@ -165,7 +165,7 @@ if ( typeof Object.create !== 'function' ) {
 
             k = $.jmolTools.numModels;
 
-            console.log("Color one model: " + k)
+            //console.log("Color one model: " + k)
             
             if ($('#colorOPT :selected').val() === 'RSRZ') {
                 jmolModel.styleModelRSRZ(k, k);
