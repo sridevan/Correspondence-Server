@@ -37,6 +37,13 @@ def input_type(data):
     return processed
 
 def check_query(query):
+    """
+    This check the type of query. It can be of three types:
+    i)   loop_id
+    ii)  single range (for a HL)
+    iii) multiples ranges (for a IL)
+    iv)  string of unit ids
+    """
     
     if len(query) == 1:
         if query[0][0] == query[0][1]:
