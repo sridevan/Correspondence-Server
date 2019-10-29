@@ -90,7 +90,7 @@
   ife_nr_size = ife_nr.length;
 
   // Set the dimensions of the canvas
-  var margin = {top: 20, right: 10, bottom: 70, left: 90},
+  var margin = {top: 0, right: 10, bottom: 70, left: 90},
     width = 400,
     height = 400,
     gridSize = Math.round10((width / ife_nr_size), -1),

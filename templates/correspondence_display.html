@@ -8,8 +8,8 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js" type="text/javascript"></script>
-  <!--<script src="http://rnatest.bgsu.edu/rna3dhub/js/jsmol/JSmol.min.nojq.js"></script>
-  <script src="http://rnatest.bgsu.edu/rna3dhub/js/jquery.jmolTools.js"></script>-->
+  <!--<script src="http://rna.bgsu.edu/rna3dhub/js/jsmol/JSmol.min.nojq.js"></script>
+  <script src="http://rna.bgsu.edu/rna3dhub/js/jquery.jmolTools.js"></script>-->
   <script src="/static/js/jsmol/JSmol.min.nojq.js"></script>
   <script src="/static/js/jquery.jmolTools.js"></script>
   <script src="//d3js.org/d3.v4.min.js"></script>
@@ -21,13 +21,13 @@
     }
     
    /*  Set height of the grid so .sidenav can be 100% (adjust as needed) */ 
-    .row.content {height: 350px }
+    .row.content {height: 250px }
     
     /* Set gray background color and 100% height */
     .sidenav {
-      padding-top: 20px;
+      padding-top: 5px;
       background-color: #f1f1f1;
-      height: 400px;
+      height: 260px;
     }
     
     /* Set black background color, white text and some padding */
@@ -47,10 +47,15 @@
     }
 
     /* Table properties */
-    .tablecontainer { width: 600px; overflow; hidden;}
-      tr {display: block; }
-      th, td { width: 300px; }
-      tbody { display: block; height: 320px; overflow: auto;}
+    .tablecontainer { width: 1000px; height: 320px; overflow: scroll;}
+      /*tr {display: block; }
+      th, td { width: 333px; }
+      tbody { display: block; height: 200px; overflow: auto;} 
+      tbody {display: block; height: 200px; overflow: auto;}*/
+
+    #chart {
+      padding-left: 200px;
+    }
 
   </style>
 
@@ -67,13 +72,13 @@
           }
 
           var Info = {
-              width: 500,
-              height: 500,
+              width: 600,
+              height: 400,
               debug: false,
               color: "white",
               addSelectionOptions: false,
               use: "HTML5",
-              //j2sPath: "http://rnatest.bgsu.edu/rna3dhub/js/jsmol/j2s/",
+              //j2sPath: "http://rna.bgsu.edu/rna3dhub/js/jsmol/j2s/",
               j2sPath: "/static/js/jsmol/j2s",
               readyFunction: jmol_isReady,
               //script: script,
@@ -129,14 +134,26 @@
 <div class="container-fluid text-center">    
   <div class="row content">
     <div class="col-sm-2 sidenav" text-left">
-      <h4>Query information</h4>
-      
       <div class="block-div resizable" id="annotation-panel">
                         <dl>
                             <dt>Query PDB:</dt>
                               <dd id="common_name" class="edit">{{ query_pdb }}</dd>
                                                         
-                            <dt>Query Residues:</dt>Need to edit<dd id="common_name" class="edit"></dd>
+                            <dt>Query Residues:</dt>
+                              <dd id="common_name" class="edit">{{ loop_position }}</dd>
+
+                            <dt>Max Disc:</dt>
+                              <dd id="max_disc" class="edit">{{ maxDisc }}</dd>
+
+                            <dt>90th percentile Disc:</dt>
+                              <dd id="p_disc1" class="edit">{{ p1 }}</dd>
+
+                            <dt>95th percentile Disc:</dt>
+                              <dd id="p_disc2" class="edit">{{ p2 }}</dd>
+
+                            <dt>99th percentile Disc:</dt>
+                              <dd id="p_disc3" class="edit">{{ p3 }}</dd>
+                            -->
                             
                             <dt>Equivalence Class:</dt>
                               <dd id="common_name" class="edit"><a href="http://rna.bgsu.edu/rna3dhub/nrlist/view/{{ ec }}" target="_blank">{{ ec }}</a></dd>
@@ -155,15 +172,29 @@
           <table class="table table-bordered">
               <thead>
                 <tr>
-                  <th scope="col">Instances</th>
-                  <th scope="col">RNA Chains</th>
+                  <th scope="col">View</th>
+                  <th scope="col">RNA Chain</th>
+                  <th scope="col">tRNA occupancy</th>
+                  <th scope="col">Ribosome State</th>
+                  <th scope="col">Factors bound</th>
+                  <th scope="col">Antibiotic/ligand bound</th>
+                  {% for res in range (0, pw_list|length)%}
+                  <th scope="col">{{ pw_list[res] }}</th>
+                  {% endfor %}
                 </tr>
               </thead>
               <tbody>
-              {% for x in range(0, coord|length) %}
+              {% for k,v in pw_info.items() %}
                 <tr>
-                  <td><input type='checkbox' id='{{[x]}}' class='jmolInline' data-coord = '{{coord[x]}}' data-quality = '{{coord[x]}}'>{{x+1}}</td>
-                  <td>{{ ifes[x][1] }}</td>
+                  <td><input type='checkbox' id='{{loop.index0}}' class='jmolInline' data-coord = '{{coord[loop.index0]}}' data-quality = '{{coord[loop_index0]}}'>{{loop.index0 + 1}}</td>
+                  <td>{{ ifes[loop.index0][1] }}</td>
+                  <td>{{ trna_occupancy[loop.index0] }}</td>
+                  <td>{{ functional_state[loop.index0] }}</td>
+                  <td>{{ factors_bound[loop.index0] }}</td>
+                  <td>{{ antibiotic_bound[loop.index0] }}</td>
+                  {% for res in range (0, pw_list|length)%}
+                  <td>{{ v[pw_list[res]] }}</td>
+                  {% endfor %}
                 </tr>
               {% endfor %}
               </tbody>
@@ -222,9 +253,6 @@
             </script>
             <!--<script type="text/javascript" src="http://rnatest.bgsu.edu/corr-server/static/js/heatmap.js"></script>-->
       </div>
-      <button id="submit">get Id</button>
-      <div id="result"></div>
-        
     </div>
   </div>
 </div>
@@ -236,5 +264,5 @@
 
 </body>
 
-<script src="/static/js/heatmap.js"></script>
+<script src="http://rna.bgsu.edu/webfr3d/js/heatmap.js"></script>
 </html>
