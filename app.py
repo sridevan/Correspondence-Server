@@ -1,6 +1,7 @@
 import collections as coll
 import csv
 from collections import OrderedDict, defaultdict
+from copy import deepcopy
 from flask import Flask, json, jsonify, render_template, render_template_string, request, session
 from sqlalchemy import tuple_
 from flask_bootstrap import Bootstrap
@@ -357,7 +358,7 @@ def correspondence():
 
     query_list = input_type(data)
 
-    reject_list = ['5AFI|1|A', '5LZE|1|A']
+    reject_list = ['5AFI|1|A', '5LZE|1|A', '4WRO|1|3L', '4WSD|1|1K', '4WSD|1|1L', '4WSD|1|3L', '4WT1|1|1K', '4WT1|1|1L', '4WT1|1|3K', '4WT1|1|3L', '4WZO|1|3K', '4WZO|1|3L', '4Y4P|1|1w']
 
     #######################################################################################################
     def getKey(item):
@@ -393,7 +394,6 @@ def correspondence():
         unsorted_units = units.split(',')
         sorted_units = sorted(unsorted_units, key=lambda x: int(x.split('|')[4]))
         return sorted_units
-
     ########################################################################################################
     def check_insertion(corr_units):
         for unit in corr_units:
@@ -404,7 +404,6 @@ def correspondence():
                 corr_units.remove(unit)
 
         return corr_units
-
     #########################################################################################################
     def custom_order(dct, spec):
         res = OrderedDict()
@@ -414,7 +413,6 @@ def correspondence():
         res.update(dct.items())
 
         return res
-
     #########################################################################################################
     def group_corr(corr_list):
         corr_list.sort()
@@ -422,7 +420,6 @@ def correspondence():
         corr_grouped = [list(items) for gr, items in groupby(corr_list, key=keyf)]
 
         return corr_grouped
-
     #########################################################################################################
     def order_num(corr_list):
 
@@ -435,8 +432,8 @@ def correspondence():
                 corr_list.remove(unit)
 
         return corr_list
-
     ##########################################################################################################
+    
     units_complete_list = []
 
     if query_type == 'single_range':
@@ -476,7 +473,6 @@ def correspondence():
     elif query_type == 'loop_id':
 
         loop_id = query_list[0][0]
-
         units_query = LoopInfo.query.filter_by(loop_id=loop_id)
 
         for row in units_query:
@@ -506,6 +502,7 @@ def correspondence():
     for row in members_query:
         ife_members.append(row.ife_id)
 
+    # remove ifes that are joined (+)
     rejected_ife = []
     for i, v in enumerate(ife_members):
         if any(c in '+' for c in v):
@@ -528,8 +525,7 @@ def correspondence():
         members_chain.append(ife.split('|')[-1])
 
     members_info = zip(members_pdb, members_chain)
-    #####################################################################################################
-
+    #######################################################################################################
     # query nts as a string
     query_nts = ', '.join(units_complete_list)
 
@@ -537,7 +533,7 @@ def correspondence():
     #####################################################################################################
 
     # This section deals with getting the units of unmodified nucleotides
-
+    '''
     standard_nts = ('A', 'C', 'G', 'U')
 
     units_std_list = []
@@ -548,10 +544,11 @@ def correspondence():
             units_std_list.append(unit)
 
     query_std_len = len(units_std_list)
+    '''
+
     #####################################################################################################
 
     # This section of the code deals with getting the complete corresponding unit_ids
-
     ordering = case(
         {unit: index for index, unit in enumerate(units_complete_list)},
         value=UnitCorrespondence.unit_id_1
@@ -575,14 +572,32 @@ def correspondence():
         corr_units.append(row.unit_id_2)
 
     corr_filtered = check_insertion(corr_units)
-
     corr_grouped = group_corr(corr_filtered)
-
     corr_grouped = [x for x in corr_grouped if len(x) == query_complete_len]
-
     corr_complete = order_num(corr_grouped)
-
     corr_complete.append(units_complete_list)
+    corr_std = deepcopy(corr_complete)
+
+    accepted_seq = ['A', 'C', 'G', 'U']
+    mod_idx = []
+    for elem1 in corr_complete:
+      for elem2 in elem1:
+        seq = elem2.split('|')[3]
+        if seq not in accepted_seq:
+          mod_idx.append(elem1.index(elem2))
+
+    mod_unique = set(mod_idx)
+    mod_idx = list(mod_unique)
+
+    for elem1 in corr_std:
+      for ele in sorted(mod_idx, reverse = True): 
+        del elem1[ele]
+
+    query_std_len = len(corr_std[0])
+
+    return json.dumps(corr_complete)
+
+    '''
 
     # first_elem = []
 
@@ -637,7 +652,9 @@ def correspondence():
     members_info_updated = zip(pdb_updated, chain_updated)
     ##################################################################################
 
+    # Comment out
     # Get the list of corresponding unit-ids without modified nucleotides
+    
     ordering = case(
         {unit: index for index, unit in enumerate(units_std_list)},
         value=UnitCorrespondence.unit_id_1
@@ -658,16 +675,7 @@ def correspondence():
 
     # Append the standard units of the query motif
     corr_std.append(units_std_list)
-
-    '''
-    result_std = [[unit.unit_id_2 for unit in units] for unit_id_1, units in
-              itertools.groupby(correspondence_std, lambda x: x.unit_id_1)]
-
-    corr_std = zip(*result_std)
-
-    # Append the standard units of the query motif
-    #corr_std.append(units_std_list)
-    '''
+    
 
     ##################################################################################
 
@@ -873,7 +881,8 @@ def correspondence():
     p3 = np.percentile(a, 99)
     maxDisc = np.amax(a)
 
-    '''
+    
+    # Need to comment out
     rows = zip(ife1, ife2, disc_formatted)
 
     with open('/Applications/mamp/htdocs/corr-server/Disc/SSU-J/' + loop_id + '_disc.csv', "w") as f:
@@ -881,7 +890,7 @@ def correspondence():
         writer.writerow(["ID1", "ID2", "Disc"])
         for row in rows:
             writer.writerow(row)
-    '''
+    
 
     # return 'Max value for discrepancy is: {} and 95th percentile is {}'.format(maxDisc, p)
 
@@ -1083,11 +1092,9 @@ def trna_interactions():
 
     index_map = {v: i for i, v in enumerate(ife_trna)}
     pw_info = OrderedDict(sorted(pw_info.items(), key=lambda pair: index_map[pair[0]]))
-    #pw_info = dict(pw_info)
 
-    #return json.dumps(str(pw_info))
     return render_template("trna_interaction.html", ife_pairs=ife_pairs, pw_info=pw_info, pw_list=pw_sorted)
-
-
+   
+    '''
 if __name__ == '__main__':
     app.run(debug=True)
