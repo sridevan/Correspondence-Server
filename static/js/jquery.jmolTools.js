@@ -116,7 +116,7 @@ if ( typeof Object.create !== 'function' ) {
             // change MODEL to data_view
             if ( data.indexOf('data_view') > -1 ) {
                 jmolScriptWait("load DATA \"append structure\"\n" + data + 'end "append structure";');
-                //console.log(data);
+                console.log(data);
                 self.loaded = true;
                 //console.error('Server returned: ' + data);
             }
